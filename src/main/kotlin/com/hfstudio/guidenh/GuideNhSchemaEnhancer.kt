@@ -140,6 +140,10 @@ object GuideNhSchemaEnhancer {
         mergeAttrs(tags, "br", mapOf("clear" to enum(listOf("none", "left", "right", "all"))))
         mergeAttrs(tags, "FloatingImage", mapOf("alt" to string(), "displayHeight" to number(), "displayWidth" to number(), "h" to number(), "height" to number(), "scaleX" to number(), "scaleY" to number(), "sound" to string(), "soundSrc" to resource(), "src" to resource(), "trigger" to string(), "volume" to number("expression"), "w" to number(), "wrap" to string(), "width" to number(), "x" to number(), "y" to number()))
         mergeAttrs(tags, "SoundLink", sound())
+        define(tags, "NeiRecipeLink", "GuideNH NEI inline navigation; browser previews are inactive", mapOf(
+            "id" to item(), "handlerId" to string("Exact overlay or handler ID, case-insensitive. Required in handler mode."),
+            "mode" to enum(listOf("handler", "recipes", "usage")), "title" to string()))
+        tag(tags, "NeiRecipeLink").addProperty("kind", "inline")
         define(tags, "ImageAnnotation", "GuideNH floating image annotation", mapOf("border" to boolean("bare"), "borderColor" to color(), "borderThickness" to number(), "h" to number(), "sound" to string(), "src" to resource(), "trigger" to string(), "volume" to number("expression"), "w" to number(), "x" to number(), "y" to number()))
         define(tags, "SoundArea", "GuideNH floating image sound area", sound() + mapOf("h" to number(), "w" to number(), "trigger" to string(), "x" to number(), "y" to number()))
         mergeChildren(tags, "FloatingImage", listOf("ImageAnnotation", "SoundArea"))
@@ -322,6 +326,19 @@ object GuideNhSchemaEnhancer {
     private fun insertTemplates(root: JsonObject, sources: List<JavaSource>) {
         val snippets = root.getAsJsonObject("snippets") ?: JsonObject().also { root.add("snippets", it) }
         for (source in sources) {
+            Regex("MarkdownSnippet\\s*\\.\\s*inline\\(\\s*\"([^\"]*)\"\\s*,\\s*\"([^\"]*)\"\\s*,\\s*\"((?:[^\"\\\\]|\\\\.)*)\"\\s*,\\s*(\\d+)\\s*\\)").findAll(source.text).forEach { match ->
+                val text = unescapeJava(match.groupValues[3])
+                if (text.startsWith("&[")) {
+                    val label = match.groupValues[2]
+                    val key = "guidenh.markdown." + label.lowercase().replace(Regex("[^a-z0-9]+"), ".")
+                    val template = InsertTemplateDeclaration(match.groupValues[1], text, match.groupValues[4].toInt())
+                    snippets.add(key, JsonObject().apply {
+                        addProperty("prefix", template.tagName)
+                        add("body", JsonArray().also { array -> tabStoppedBody(template).forEach(array::add) })
+                        addProperty("description", label)
+                    })
+                }
+            }
             if (!source.text.contains("InsertTemplate")) continue
             Regex("sink\\s*\\.\\s*insertTemplates\\(([\\s\\S]*?)\\)\\s*;").findAll(source.text).forEach { call ->
                 for (argument in splitArguments(call.groupValues[1])) {

@@ -1,13 +1,18 @@
 package com.hfstudio.guidenh
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import org.intellij.markdown.ast.ASTNode
+import org.intellij.markdown.MarkdownElementTypes
+import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
+import org.intellij.markdown.parser.MarkdownParser
 import org.intellij.plugins.markdown.extensions.CodeFenceGeneratingProvider
 import org.intellij.plugins.markdown.extensions.MarkdownBrowserPreviewExtension
 import org.intellij.plugins.markdown.ui.preview.MarkdownHtmlPanel
 import org.intellij.plugins.markdown.ui.preview.ResourceProvider
 import com.hfstudio.MyMessageBundle
 import java.util.Base64
+import com.google.gson.Gson
 
 /** Renders GuideNH fenced and inline Markdown extensions inside IDEA's built-in preview. */
 class GuideNhFencePreviewProvider : CodeFenceGeneratingProvider {
@@ -65,7 +70,8 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
 
     private fun documentContextScript(): String {
         val documentUrl = panel.virtualFile?.url.orEmpty()
-        val imageReferences = documentImageReferences().joinToString(",") { "\"${escapeJavaScript(it)}\"" }
+        val source = documentSource()
+        val imageReferences = documentImageReferences(source).joinToString(",") { "\"${escapeJavaScript(it)}\"" }
         // Browser-extension resources are served by IDEA's panel-level aggregating provider.
         // Resolve from the preview page itself so its already registered provider hash is kept.
         return """
@@ -73,8 +79,36 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
               window.__GUIDENH_DOCUMENT_URL__="${escapeJavaScript(documentUrl)}";
               window.__GUIDENH_IMAGE_URL__=new URL("$imageResourcePrefix", document.baseURI).toString();
               window.__GUIDENH_IMAGE_REFERENCES__=[$imageReferences];
+              window.__GUIDENH_ACTION_LINKS__=${documentActionLinks(source)};
             })();
         """.trimIndent()
+    }
+
+    private fun documentSource(): String {
+        val file = panel.virtualFile ?: return ""
+        val cached = FileDocumentManager.getInstance().getCachedDocument(file)
+        return cached?.immutableCharSequence?.toString()
+            ?: runCatching { file.inputStream.use { it.reader(Charsets.UTF_8).readText() } }.getOrDefault("")
+    }
+
+    private fun documentActionLinks(source: String): String {
+        if (!source.contains("&[")) return "[]"
+        val pattern = Regex("""&\[((?:\\.|[^\]\\])*)]\(((?:\\.|[^)\\])*)\)""")
+        val unescape = Regex("""\\([\[\]()\\])""")
+        fun decode(value: String): String = unescape.replace(value) { match ->
+            if (match.groupValues[1] == "\\") match.value else match.groupValues[1]
+        }
+        val links = mutableListOf<Map<String, String>>()
+        fun collect(node: ASTNode) {
+            if (node.type == MarkdownElementTypes.INLINE_LINK && node.startOffset > 0 && source[node.startOffset - 1] == '&') {
+                pattern.matchAt(source, node.startOffset - 1)?.let { match ->
+                    links += mapOf("label" to decode(match.groupValues[1]), "destination" to decode(match.groupValues[2]))
+                }
+            }
+            node.children.forEach(::collect)
+        }
+        collect(MarkdownParser(GFMFlavourDescriptor()).buildMarkdownTreeFromString(source))
+        return Gson().toJson(links)
     }
 
     /**
@@ -82,9 +116,7 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
      * Pass the source-order image references to the browser extension so it can still request the
      * GuideNH static resource endpoint after the built-in renderer has converted src.
      */
-    private fun documentImageReferences(): List<String> {
-        val document = panel.virtualFile ?: return emptyList()
-        val text = runCatching { document.inputStream.use { it.reader().readText() } }.getOrDefault("")
+    private fun documentImageReferences(text: String): List<String> {
         val references = mutableListOf<String>()
         Regex("""!\[[^\]]*]\(\s*(?:<([^>]+)>|([^\s)]+)(?:\s+[^)]*)?)\s*\)""").findAll(text).forEach { match ->
             (match.groupValues[1].ifBlank { match.groupValues[2] }).takeIf(String::isNotBlank)?.let(references::add)

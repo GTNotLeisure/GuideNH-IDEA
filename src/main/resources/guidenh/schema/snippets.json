@@ -12,12 +12,16 @@
     },
     "guidenh.block": {
       "prefix": "Block",
-      "body": ["<Block id=\"${1:minecraft:stone}\" />"],
+      "body": [
+        "<Block id=\"${1:minecraft:stone}\" />"
+      ],
       "description": "Insert a scene block."
     },
     "guidenh.importStructure": {
       "prefix": "ImportStructure",
-      "body": ["<ImportStructure src=\"${1:./structure.snbt}\" />"],
+      "body": [
+        "<ImportStructure src=\"${1:./structure.snbt}\" />"
+      ],
       "description": "Import a structure into a GameScene."
     },
     "guidenh.importStructureLib": {
@@ -46,13 +50,45 @@
     },
     "guidenh.itemLink": {
       "prefix": "ItemLink",
-      "body": ["<ItemLink id=\"${1:minecraft:diamond}\" />"],
+      "body": [
+        "<ItemLink id=\"${1:minecraft:diamond}\" />"
+      ],
       "description": "Insert an item link."
     },
     "guidenh.recipe": {
       "prefix": "Recipe",
-      "body": ["<Recipe id=\"${1:minecraft:stone}\" />"],
+      "body": [
+        "<Recipe id=\"${1:minecraft:stone}\" />"
+      ],
       "description": "Insert a recipe."
+    },
+    "guidenh.neiRecipeLink": {
+      "prefix": "NeiRecipeLink",
+      "body": [
+        "<NeiRecipeLink handlerId=\"$0gt.recipe.cokeoven\">Check NEI</NeiRecipeLink>"
+      ],
+      "description": "Insert a <NeiRecipeLink> tag."
+    },
+    "guidenh.markdown.nei.handler.link": {
+      "prefix": "&[",
+      "body": [
+        "&[$0Check NEI](nei:handler?handlerId=gt.recipe.cokeoven)"
+      ],
+      "description": "NEI handler link"
+    },
+    "guidenh.markdown.nei.recipe.link": {
+      "prefix": "&[",
+      "body": [
+        "&[$0Check recipes](nei:recipes?id=minecraft:iron_ingot)"
+      ],
+      "description": "NEI recipe link"
+    },
+    "guidenh.markdown.nei.usage.link": {
+      "prefix": "&[",
+      "body": [
+        "&[$0Check usages](nei:usage?id=gregtech:gt.blockmachines:236&handlerId=gt.recipe.cokeoven)"
+      ],
+      "description": "NEI usage link"
     }
   }
 }

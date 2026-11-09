@@ -23,6 +23,87 @@
     mermaid: 'Mermaid', latex: 'LaTeX', questCard: 'Quest card', structure: 'Structure', importedStructure: 'Imported structure', importedPonder: 'Imported Ponder',
     alerts: { note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution' }
   };
+  const neiExplanation = isChinese ? '请在 GuideNH 中打开本指南以查看 NEI 配方。' : 'Open this guide in GuideNH to view NEI recipes.';
+  const makeNeiSpan = (content, title = '', plainLabel = false) => {
+    const span = document.createElement('span');
+    span.className = 'guidenh-nei-link';
+    if (plainLabel) span.dataset.guidenhActionLabel = 'true';
+    span.title = [title, neiExplanation].filter(Boolean).join('\n');
+    if (typeof content === 'string') span.textContent = content;
+    else span.append(...content);
+    return span;
+  };
+  all('neirecipelink').forEach(element => {
+    const id = attr(element, 'id').trim(), handler = attr(element, 'handlerId').trim();
+    const mode = element.hasAttribute('mode') ? attr(element, 'mode').trim().toLowerCase() : (id ? 'recipes' : 'handler');
+    const error = !['handler', 'recipes', 'usage'].includes(mode) ? 'Unknown NEI action: ' + mode
+      : /[\u0000-\u001f\u007f-\u009f]/.test(attr(element, 'id') + attr(element, 'handlerId')) ? 'NEI targets must not contain control characters.'
+      : mode === 'handler' && (!handler || id) ? 'NEI handler mode requires handlerId and does not accept id.'
+      : mode !== 'handler' && !id ? 'NEI ' + mode + ' mode requires id.'
+      : !element.textContent.trim() && !element.querySelector('img,svg,itemicon,itemimage,itemid,blockid,keybind,playername,amount') ? 'NeiRecipeLink requires visible inline content.' : '';
+    const span = makeNeiSpan(error || Array.from(element.childNodes), attr(element, 'title'));
+    if (error) span.className = 'guidenh-preview-error';
+    element.replaceWith(span);
+  });
+  all('[data-guidenh-nei-link]').forEach(element => { element.title = neiExplanation; });
+  const makeNeiAction = (label, destination) => {
+    try {
+      if (!label.trim() || destination.includes('#')) throw new Error('NEI actions require a visible label and do not accept fragments.');
+      const query = destination.indexOf('?');
+      const mode = destination.slice(4, query < 0 ? undefined : query).trim().toLowerCase();
+      const values = new Map();
+      if (query >= 0) for (const pair of destination.slice(query + 1).split('&')) {
+        const equals = pair.indexOf('=');
+        if (equals <= 0) throw new Error('NEI parameters must have a name and value.');
+        const name = decodeURIComponent(pair.slice(0, equals)), value = decodeURIComponent(pair.slice(equals + 1));
+        if (!['id', 'handlerId'].includes(name) || !value.trim() || values.has(name)) throw new Error('Unknown, blank or duplicate NEI parameter: ' + name);
+        values.set(name, value);
+      }
+      if (!['handler', 'recipes', 'usage'].includes(mode)) throw new Error('Unknown NEI action: ' + mode);
+      if (mode === 'handler' && (!values.get('handlerId') || values.has('id'))) throw new Error('NEI handler mode requires handlerId and does not accept id.');
+      if (mode !== 'handler' && !values.get('id')) throw new Error('NEI ' + mode + ' mode requires id.');
+      return makeNeiSpan(label, '', true);
+    } catch (error) {
+      const span = document.createElement('span');
+      span.className = 'guidenh-preview-error';
+      span.textContent = error.message;
+      return span;
+    }
+  };
+  const sourceActionLinks = new Map();
+  for (const link of window.__GUIDENH_ACTION_LINKS__ || []) {
+    const entries = sourceActionLinks.get(link.destination) || [];
+    entries.push(link);
+    sourceActionLinks.set(link.destination, entries);
+  }
+  for (const [destination, entries] of sourceActionLinks) sourceActionLinks.set(destination, entries.values());
+  all('a[href]').forEach(anchor => {
+    const destination = anchor.getAttribute('href') || '';
+    const previous = anchor.previousSibling;
+    if (!/^nei:/i.test(destination) || previous?.nodeType !== Node.TEXT_NODE || !previous.nodeValue.endsWith('&')) return;
+    previous.nodeValue = previous.nodeValue.slice(0, -1);
+    const source = sourceActionLinks.get(destination)?.next().value;
+    anchor.replaceWith(makeNeiAction(source ? source.label : anchor.textContent, destination));
+  });
+  const actionWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const actionNodes = [];
+  while (actionWalker.nextNode()) actionNodes.push(actionWalker.currentNode);
+  actionNodes.forEach(node => {
+    if (node.parentElement?.closest('code,pre,script,style,.guidenh-nei-link')) return;
+    const pattern = /&\[((?:\\.|[^\]\\])*)]\(((?:\\.|[^)\\])*)\)/g;
+    const source = node.nodeValue || '';
+    const fragment = document.createDocumentFragment();
+    let offset = 0, match;
+    while ((match = pattern.exec(source))) {
+      fragment.append(document.createTextNode(source.slice(offset, match.index)));
+      const unescape = value => value.replace(/\\([\[\]()\\])/g, (match, delimiter) => delimiter === '\\' ? match : delimiter);
+      const destination = unescape(match[2]);
+      const label = unescape(match[1]);
+      fragment.append(/^nei:/i.test(destination) ? makeNeiAction(label, destination) : document.createTextNode(match[0]));
+      offset = pattern.lastIndex;
+    }
+    if (offset) { fragment.append(document.createTextNode(source.slice(offset))); node.replaceWith(fragment); }
+  });
   const finite = values => values.filter(Number.isFinite);
   const range = (min, max, fallbackMin, fallbackMax) => {
     const left = number(min, fallbackMin), right = number(max, fallbackMax);
@@ -131,7 +212,7 @@
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const textNodes = []; while (walker.nextNode()) textNodes.push(walker.currentNode);
   textNodes.forEach(node => {
-    if (['CODE', 'PRE', 'SCRIPT', 'STYLE'].includes(node.parentElement && node.parentElement.tagName)) return;
+    if (node.parentElement?.closest('code,pre,script,style,[data-guidenh-action-label]')) return;
     let html = esc(node.nodeValue), changed = false;
     markers.forEach(([marker, className]) => {
       const escaped = marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

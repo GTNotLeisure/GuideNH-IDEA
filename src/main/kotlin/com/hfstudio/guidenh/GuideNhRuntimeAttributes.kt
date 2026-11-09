@@ -1,6 +1,7 @@
 package com.hfstudio.guidenh
 
 private val runtimeAttributeCapabilities = mapOf(
+    "NeiRecipeLink.id" to "items",
     "ItemLink.id" to "items", "ItemLink.ore" to "ores",
     "ItemImage.id" to "items", "ItemImage.ore" to "ores",
     "BlockImage.id" to "items", "BlockImage.ore" to "ores",

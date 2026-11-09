@@ -11,9 +11,10 @@ import com.hfstudio.MyMessageBundle
 class GuideNhAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         if (element !is PsiFile || !GuideNhFileUtil.isGuideNhDocument(element)) return
-        val model = GuideNhParser.parse(element.text)
+        val source = element.text
+        val model = GuideNhParser.parse(source)
         val schema = GuideNhSchemaService.get(element.project)
-        validateFrontmatter(element.text, schema, holder)
+        validateFrontmatter(source, schema, holder)
         val stack = ArrayDeque<GuideNhTag>()
         for (tag in model.tags) {
             val tagSchema = schema.tag(tag.name)
@@ -66,15 +67,16 @@ class GuideNhAnnotator : Annotator {
                 }
             }
             validateFloatingImage(tag, holder)
+            validateNeiLink(tag, source, holder)
             if (!tag.selfClosing && tagSchema != null) stack.addLast(tag)
         }
         stack.forEachIndexed { index, tag ->
             val closingNames = stack.drop(index).asReversed().map { it.name }
             val closingAnnotation = holder.newAnnotation(HighlightSeverity.ERROR, MyMessageBundle.message("diagnostic.unclosed.tag", tag.name))
                 .range(tag.range)
-                .withFix(GuideNhCloseTagFix(closingNames, element.text, element.text.length, tag.range.startOffset))
-            findPreferredClosingBoundary(element.text, model.tags, tag)?.let { boundary ->
-                closingAnnotation.withFix(GuideNhCloseTagFix(closingNames, element.text, boundary.range.endOffset, tag.range.startOffset, boundary.name))
+                .withFix(GuideNhCloseTagFix(closingNames, source, source.length, tag.range.startOffset))
+            findPreferredClosingBoundary(source, model.tags, tag)?.let { boundary ->
+                closingAnnotation.withFix(GuideNhCloseTagFix(closingNames, source, boundary.range.endOffset, tag.range.startOffset, boundary.name))
             }
             closingAnnotation.create()
         }
@@ -104,6 +106,26 @@ class GuideNhAnnotator : Annotator {
         if (reference.kind == GuideNhReferenceKind.PAGE) return true
         if (reference.value.endsWith(".md", true)) return true
         return isNamespacedResource(reference.value)
+    }
+
+    private fun validateNeiLink(tag: GuideNhTag, source: String, holder: AnnotationHolder) {
+        if (!tag.name.equals("NeiRecipeLink", true)) return
+        val attrs = tag.attributes.associate { it.name to it.value.orEmpty() }
+        val id = attrs["id"].orEmpty().trim()
+        val handler = attrs["handlerId"].orEmpty().trim()
+        val mode = attrs["mode"]?.trim()?.lowercase() ?: if (id.isBlank()) "handler" else "recipes"
+        val closing = source.indexOf("</NeiRecipeLink>", tag.range.endOffset)
+        val body = if (closing >= 0) source.substring(tag.range.endOffset, closing) else ""
+        val visualContent = Regex("<(?:ItemIcon|ItemImage|ItemId|BlockId|KeyBind|PlayerName|Amount|img)\\b", RegexOption.IGNORE_CASE).containsMatchIn(body)
+        val message = when {
+            mode !in setOf("handler", "recipes", "usage") -> "Unknown NEI action: $mode"
+            (attrs["id"].orEmpty() + attrs["handlerId"].orEmpty()).any { it.code < 32 || it.code in 127..159 } -> "NEI targets must not contain control characters."
+            mode == "handler" && (handler.isBlank() || id.isNotBlank()) -> "NEI handler mode requires handlerId and does not accept id."
+            mode != "handler" && id.isBlank() -> "NEI $mode mode requires id."
+            tag.selfClosing || (closing >= 0 && body.replace(Regex("<[^>]*>"), "").isBlank() && !visualContent) -> "NeiRecipeLink requires visible inline content."
+            else -> null
+        }
+        message?.let { error(holder, tag.range, it) }
     }
 
     /** True for `namespace:path`, excluding a Windows drive letter, which is a file path instead. */

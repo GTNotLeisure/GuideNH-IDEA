@@ -43,6 +43,7 @@ object GuideNhParser {
         }
         references += findFrontmatterSemanticReferences(text)
         for (match in markdownLinkPattern.findAll(markdownMaskedText)) {
+            if (match.range.first > 0 && text[match.range.first - 1] == '&') continue
             val rawValue = match.groupValues[1]
             val value = unwrapLegacyMarkdownDestination(rawValue)
             val kind = when {
@@ -58,6 +59,7 @@ object GuideNhParser {
         }
         for (tag in tags) {
             for (attribute in tag.attributes) {
+                if (tag.name.equals("NeiRecipeLink", true) && !attribute.name.equals("id", true)) continue
                 val normalized = attribute.name.lowercase()
                 val value = attribute.value ?: continue
                 // Keep semantic references aligned with GuideVSC's explicit runtime
@@ -65,6 +67,7 @@ object GuideNhParser {
                 // tags and must not acquire item completion, hover or Find Usages.
                 val runtimeCapability = resolveGuideNhRuntimeCapability(tag.name, attribute.name)
                 val kind = when {
+                    tag.name.equals("NeiRecipeLink", true) -> GuideNhReferenceKind.ITEM
                     normalized in pageAttributeNames || value.endsWith(".md", true) -> GuideNhReferenceKind.PAGE
                     // Classified as a resource even for a bare file name such as `test1.png`, because hover
                     // and go-to-definition resolve through the resource index. Whether a missing one is an
