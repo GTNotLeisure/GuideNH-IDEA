@@ -50,6 +50,9 @@ object GuideNhSchemaEnhancer {
     }
 
     private fun scenes(tags: JsonObject, sources: List<JavaSource>) {
+        listOf("BlockAnnotation", "BoxAnnotation", "OutlineAnnotation").forEach {
+            mergeAttrs(tags, it, mapOf("colorMode" to enum(listOf("solid", "rainbow")), "colorPeriod" to number("expression")))
+        }
         val children = linkedSetOf<String>()
         source(sources, "SceneTagCompiler")?.text?.let { children += sceneNames(it) }
         source(sources, "DefaultExtensions")?.text?.let { extensions ->
