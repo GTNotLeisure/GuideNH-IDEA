@@ -28,6 +28,8 @@ object GuideNhSchemaEnhancer {
             tagNames(compiler.text).forEach { mergeAttrs(tags, it, common + axes(compiler.text)) }
         }
         source(sources, "ChartChildParser")?.text?.let { text ->
+            if (text.contains("\"ReferenceLine\"")) define(tags, "ReferenceLine", "A fixed value-axis reference: y for column, line and scatter charts; x for bar charts, with y accepted as an alias.", mapOf(
+                "color" to color(), "label" to string(), "x" to number("expression"), "y" to number("expression")))
             if (text.contains("\"Series\"")) define(tags, "Series", "GuideNH chart series", mapOf(
                 "color" to string(), "data" to string(), "icon" to string(), "iconImage" to string(), "name" to string(), "points" to string(), "tooltip" to string()), listOf("Point"))
             if (text.contains("\"LineSeries\"")) define(tags, "LineSeries", "GuideNH line chart series", mapOf(
@@ -38,7 +40,7 @@ object GuideNhSchemaEnhancer {
                 "direction" to string(), "height" to number("expression"), "position" to string(), "size" to number("expression"), "startAngleDeg" to number("expression"), "title" to string(), "titleColor" to string(), "width" to number("expression")), listOf("Slice"))
             define(tags, "Point", "GuideNH chart point", mapOf("atX" to number("expression"), "atY" to number("expression"), "color" to string(), "label" to string(), "plot" to number("expression"), "x" to number("expression"), "y" to number("expression")))
         }
-        mapOf("ColumnChart" to listOf("Series", "LineSeries", "PieInset"), "BarChart" to listOf("Series", "LineSeries", "PieInset"), "LineChart" to listOf("Series"), "ScatterChart" to listOf("Series"), "PieChart" to listOf("Slice")).forEach { (tag, children) -> mergeChildren(tags, tag, children) }
+        mapOf("ColumnChart" to listOf("Series", "LineSeries", "PieInset", "ReferenceLine"), "BarChart" to listOf("Series", "LineSeries", "PieInset", "ReferenceLine"), "LineChart" to listOf("Series", "ReferenceLine"), "ScatterChart" to listOf("Series", "ReferenceLine"), "PieChart" to listOf("Slice")).forEach { (tag, children) -> mergeChildren(tags, tag, children) }
     }
 
     private fun containers(tags: JsonObject) {
