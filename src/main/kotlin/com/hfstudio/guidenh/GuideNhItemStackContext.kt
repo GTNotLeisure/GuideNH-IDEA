@@ -8,11 +8,18 @@ data class GuideNhItemStackContext(
     val tagEndExclusive: Int,
     val valueStart: Int,
     val valueEndExclusive: Int,
-    val value: String
+    val value: String,
+    val capability: String = "items"
 )
 
 object GuideNhItemStackContexts {
     private val attributeTargets = mapOf(
+        "fluidimage" to setOf("id"), "fluidlink" to setOf("id"), "fluidicon" to setOf("id"),
+        "inputannotation" to setOf("item", "fluid"),
+        "recipe" to setOf("id", "fluid"), "usage" to setOf("id", "fluid"), "recipefor" to setOf("id", "fluid"),
+        "recipeusage" to setOf("id", "fluid"), "recipesfor" to setOf("id", "fluid"), "recipesusage" to setOf("id", "fluid"),
+        "contenttabs" to setOf("iconitem", "icon_item", "iconfluid", "icon_fluid"),
+        "series" to setOf("icon", "iconfluid"), "lineseries" to setOf("icon", "iconfluid"), "slice" to setOf("icon", "iconfluid"),
         "itemlink" to setOf("id"),
         "itemimage" to setOf("id"),
         "blockimage" to setOf("id"),
@@ -41,7 +48,8 @@ object GuideNhItemStackContexts {
                     tagEndExclusive = tag.range.last + 1,
                     valueStart = tag.range.first + valueGroup.range.first,
                     valueEndExclusive = tag.range.first + valueGroup.range.last + 1,
-                    value = valueGroup.value
+                    value = valueGroup.value,
+                    capability = if (tagName.startsWith("Fluid", true) || attributeName.contains("fluid", true)) "fluids" else "items"
                 )
             }
         }.firstOrNull { context -> offset in context.valueStart..context.valueEndExclusive }

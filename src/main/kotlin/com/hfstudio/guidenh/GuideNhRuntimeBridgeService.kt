@@ -115,25 +115,25 @@ class GuideNhRuntimeBridgeService {
     fun previewSearchPage(capability: String, cursor: String = "", prefix: String = "", limit: Int = 80, filters: Map<String, String> = emptyMap()): RuntimePage =
         parseRuntimePage(capability, requestPayload("preview.search", queryPayload(capability, cursor, prefix, limit, filters)), "preview.search", cacheKey(capability, filters, prefix), cursor.isEmpty())
 
-    fun previewResolve(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap()): JsonObject? {
-        val key = previewKey(capability, id, count, nbt, renderVariant, filters)
+    fun previewResolve(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap(), amount: Int? = null): JsonObject? {
+        val key = previewKey(capability, id, count, nbt, renderVariant, filters, amount)
         previewCache[key]?.let { return it.deepCopy() }
         val value = validatePreviewResolve(capability, id, requestPayload("preview.resolve", mapOf(
-            "capability" to capability, "id" to id, "count" to count, "nbt" to nbt,
+            "capability" to capability, "id" to id, "count" to count, "amount" to amount, "nbt" to nbt,
             "renderVariant" to renderVariant, "filters" to filters
         ))) ?: return null
         cachePreview(key, value)
         return value.deepCopy()
     }
 
-    fun previewCached(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap()): JsonObject? =
-        previewCache[previewKey(capability, id, count, nbt, renderVariant, filters)]?.deepCopy()
+    fun previewCached(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap(), amount: Int? = null): JsonObject? =
+        previewCache[previewKey(capability, id, count, nbt, renderVariant, filters, amount)]?.deepCopy()
 
-    fun prefetchPreview(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap()) {
-        val key = previewKey(capability, id, count, nbt, renderVariant, filters)
+    fun prefetchPreview(capability: String, id: String, count: Int? = null, nbt: String? = null, renderVariant: String? = null, filters: Map<String, String> = emptyMap(), amount: Int? = null) {
+        val key = previewKey(capability, id, count, nbt, renderVariant, filters, amount)
         if (!isConnected || previewCache.containsKey(key)) return
         previewPrefetches.computeIfAbsent(key) {
-            CompletableFuture.runAsync({ previewResolve(capability, id, count, nbt, renderVariant, filters) }, previewExecutor)
+            CompletableFuture.runAsync({ previewResolve(capability, id, count, nbt, renderVariant, filters, amount) }, previewExecutor)
                 .whenComplete { _, _ -> previewPrefetches.remove(key) }
         }
     }
@@ -460,8 +460,8 @@ class GuideNhRuntimeBridgeService {
         return actualId == metaSuffix.groupValues[1]
     }
 
-    private fun previewKey(capability: String, id: String, count: Int?, nbt: String?, renderVariant: String?, filters: Map<String, String>): String =
-        "$capability\u0000$id\u0000${count ?: 1}\u0000${nbt.orEmpty()}\u0000${renderVariant.orEmpty()}\u0000${filters.toSortedMap()}"
+    private fun previewKey(capability: String, id: String, count: Int?, nbt: String?, renderVariant: String?, filters: Map<String, String>, amount: Int?): String =
+        "$capability\u0000$id\u0000${count ?: 1}\u0000${amount ?: ""}\u0000${nbt.orEmpty()}\u0000${renderVariant.orEmpty()}\u0000${filters.toSortedMap()}"
 
     private fun cachePreview(key: String, value: JsonObject) {
         previewCache[key] = value.deepCopy()

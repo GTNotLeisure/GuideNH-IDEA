@@ -62,13 +62,13 @@ class GuideNhItemInlayService : Disposable {
             val startOffset = editor.document.getLineStartOffset((firstLine - VISIBLE_LINE_PADDING).coerceAtLeast(0))
             val endOffset = editor.document.getLineEndOffset((lastLine + VISIBLE_LINE_PADDING).coerceAtMost(editor.document.lineCount - 1))
             val references = GuideNhParser.parse(editor.document.text).references
-                .asSequence().filter { it.kind == GuideNhReferenceKind.ITEM && it.range.startOffset in startOffset..endOffset }
+                .asSequence().filter { it.kind in setOf(GuideNhReferenceKind.ITEM, GuideNhReferenceKind.FLUID) && it.range.startOffset in startOffset..endOffset }
                 .take(MAX_VISIBLE_CONTEXTS).toList()
-            val images = references.map { it.value }.distinct().associateWith { itemId ->
-                CompletableFuture.supplyAsync({ resolveImage(itemId) }, previewExecutor)
+            val images = references.map { it.kind to it.value }.distinct().associateWith { (kind, id) ->
+                CompletableFuture.supplyAsync({ resolveImage(id, if (kind == GuideNhReferenceKind.FLUID) "fluids" else "items") }, previewExecutor)
             }
             val resolved = references.mapNotNull { reference ->
-                runCatching { images.getValue(reference.value).get() }.getOrNull()?.let { image -> reference.range.endOffset to image }
+                runCatching { images.getValue(reference.kind to reference.value).get() }.getOrNull()?.let { image -> reference.range.endOffset to image }
             }
             ApplicationManager.getApplication().invokeLater {
                 if (editor.isDisposed || editor.document.modificationStamp != documentStamp) return@invokeLater
@@ -82,10 +82,10 @@ class GuideNhItemInlayService : Disposable {
         }
     }
 
-    private fun resolveImage(itemId: String): Image? {
+    private fun resolveImage(itemId: String, capability: String): Image? {
         val runtime = GuideNhRuntimeBridgeService.get()
-        val preview = runtime.previewCached("items", itemId, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
-            ?: if (runtime.isConnected) runtime.previewResolve("items", itemId, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline")) else null
+        val preview = runtime.previewCached(capability, itemId, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
+            ?: if (runtime.isConnected) runtime.previewResolve(capability, itemId, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline")) else null
         val base64 = preview?.get("iconPngBase64")?.asString ?: return null
         return runCatching { ImageIcon(Base64.getDecoder().decode(base64)).image }.getOrNull()
     }

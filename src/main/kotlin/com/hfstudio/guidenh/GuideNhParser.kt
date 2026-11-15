@@ -73,6 +73,7 @@ object GuideNhParser {
                     // and go-to-definition resolve through the resource index. Whether a missing one is an
                     // error belongs to the annotator, which knows a bare name is a document-relative path.
                     isGuideNhResourceReference(value) || normalized in resourceAttributeNames -> GuideNhReferenceKind.RESOURCE
+                    runtimeCapability == "fluids" -> GuideNhReferenceKind.FLUID
                     runtimeCapability == "items" -> GuideNhReferenceKind.ITEM
                     runtimeCapability == "ores" -> GuideNhReferenceKind.ORE
                     else -> null
@@ -93,11 +94,11 @@ object GuideNhParser {
         for (lineIndex in 1 until lines.size) {
             val rawLine = lines[lineIndex].removeSuffix("\r")
             if (rawLine.trim() == "---") break
-            val scalar = Regex("^(\\s*)(item_id|item_ids|ore_ids)\\s*:\\s*(.*?)\\s*$", RegexOption.IGNORE_CASE).find(rawLine)
+            val scalar = Regex("^(\\s*)(item_id|item_ids|fluid_id|fluid_ids|ore_ids)\\s*:\\s*(.*?)\\s*$", RegexOption.IGNORE_CASE).find(rawLine)
             if (scalar != null) {
                 val name = scalar.groupValues[2]
                 val rawValue = scalar.groupValues[3]
-                val kind = if (name.equals("ore_ids", true)) GuideNhReferenceKind.ORE else GuideNhReferenceKind.ITEM
+                val kind = when { name.startsWith("fluid", true) -> GuideNhReferenceKind.FLUID; name.equals("ore_ids", true) -> GuideNhReferenceKind.ORE; else -> GuideNhReferenceKind.ITEM }
                 val valueStart = offset + scalar.range.first + scalar.value.lastIndexOf(rawValue)
                 if (rawValue.isBlank()) {
                     activeKind = kind

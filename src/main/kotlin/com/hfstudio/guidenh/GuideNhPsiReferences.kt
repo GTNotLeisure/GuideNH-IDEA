@@ -30,6 +30,7 @@ object GuideNhPsiReferences {
                             .queryPages(reference.value, file.virtualFile).map { it.relativePath }
                         GuideNhReferenceKind.RESOURCE -> GuideNhWorkspaceIndex.get(file.project)
                             .queryResources(reference.value, file.virtualFile).map { it.relativePath }
+                        GuideNhReferenceKind.FLUID -> GuideNhWorkspaceIndex.get(file.project).findFluidPages(reference.value).map { it.pageId }
                         GuideNhReferenceKind.ITEM -> GuideNhWorkspaceIndex.get(file.project)
                             .findItemPages(reference.value).map { it.pageId }
                         GuideNhReferenceKind.ORE -> GuideNhWorkspaceIndex.get(file.project)
@@ -44,6 +45,7 @@ object GuideNhPsiReferences {
         return when (reference.kind) {
             GuideNhReferenceKind.PAGE -> index.findPage(reference.value, source.virtualFile)?.file
             GuideNhReferenceKind.RESOURCE -> index.findResource(reference.value, source.virtualFile)?.file
+            GuideNhReferenceKind.FLUID -> index.findFluidPages(reference.value).firstOrNull()?.file
             GuideNhReferenceKind.ITEM -> index.findItemPages(reference.value).firstOrNull()?.file
             GuideNhReferenceKind.ORE -> index.findOrePages(reference.value).firstOrNull()?.file
         }

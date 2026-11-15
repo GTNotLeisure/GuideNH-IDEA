@@ -18,8 +18,34 @@ object GuideNhSchemaEnhancer {
         tables(tags)
         references(tags)
         contributors(tags, sources)
+        fluids(tags)
         markdownExtensions(root, sources)
         insertTemplates(root, sources)
+    }
+
+    private fun fluids(tags: JsonObject) {
+        if (!tags.has("FluidImage") && !tags.has("FluidLink")) return
+        val shared = mapOf("id" to attr("fluid").apply { addProperty("required", true) },
+            "amount" to number("expression"), "nbt" to string(), "showTooltip" to boolean(), "noTooltip" to boolean())
+        mapOf(
+            "FluidImage" to shared + mapOf("scale" to number(), "label" to string(), "format" to string(),
+                "showIcon" to boolean(), "yOffset" to number(), "labelYOffset" to number(),
+                "wrap" to string(), "align" to string(), "float" to string()),
+            "FluidLink" to shared + mapOf("scale" to number(), "showIcon" to string(), "showText" to boolean(), "linksTo" to attr("page")),
+            "FluidIcon" to shared
+        ).forEach { (name, attributes) ->
+            val destination = tag(tags, name)
+            destination.add("attributes", JsonObject().apply { attributes.forEach { (key, value) -> add(key, value) } })
+            destination.addProperty("kind", if (name == "FluidLink") "inline" else if (name == "FluidIcon") "any" else "block")
+            destination.addProperty("description", "Native Forge fluid content using registry names.")
+        }
+        listOf("Recipe", "Usage", "RecipeFor", "RecipeUsage", "RecipesFor", "RecipesUsage").forEach { name ->
+            mergeAttrs(tags, name, mapOf(
+                "id" to item().apply { addProperty("required", false); add("requiredWhenMissing", JsonArray().apply { add("fluid") }) },
+                "fluid" to attr("fluid").apply { add("requiredWhenMissing", JsonArray().apply { add("id") }) },
+                "inputFluid" to attr("fluid"), "outputFluid" to attr("fluid")))
+        }
+        setChildren(tag(tags, "ItemGrid"), listOf("ItemIcon", "FluidIcon"))
     }
 
     private fun charts(tags: JsonObject, sources: List<JavaSource>) {
@@ -394,6 +420,7 @@ object GuideNhSchemaEnhancer {
         "BOOLEAN" -> boolean()
         "COLOR" -> color()
         "ENUM" -> if (values.isEmpty()) string() else enum(values)
+        "FLUID_ID" -> attr("fluid")
         "ITEM_ID", "BLOCK_ID" -> item()
         "ORE_DICT" -> ore()
         "PAGE_PATH" -> attr("page")

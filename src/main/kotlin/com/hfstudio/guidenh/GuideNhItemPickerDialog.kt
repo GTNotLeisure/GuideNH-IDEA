@@ -25,24 +25,24 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JComboBox
 import javax.swing.ListSelectionModel
+import com.intellij.util.ui.JBUI
 import javax.swing.JList
 import javax.swing.TransferHandler
-import java.awt.datatransfer.StringSelection
 import javax.swing.event.DocumentEvent
 import com.hfstudio.MyMessageBundle
 
 /** Native IDEA replacement for GuideVSC's ItemStack picker webview. */
-data class GuideNhItemStackSelection(val id: String, val meta: Int?, val count: Int, val nbt: String?, val renderVariant: String)
+data class GuideNhItemStackSelection(val id: String, val meta: Int?, val count: Int, val nbt: String?, val renderVariant: String, val amount: Int? = null)
 
-class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWrapper(project) {
+class GuideNhItemPickerDialog(project: Project, initialValue: String, private val capability: String = "items") : DialogWrapper(project) {
     private data class Entry(val id: String, val label: String?, val detail: String?) {
         override fun toString(): String = label?.takeIf { it.isNotBlank() }?.let { "$it  ($id)" } ?: id
     }
 
-    private val initial = parseItemStack(initialValue)
+    private val initial = if (capability == "fluids") ParsedItemStack(initialValue, null, null) else parseItemStack(initialValue)
     private val query = JBTextField(initial.id)
     private val meta = JBTextField(initial.meta?.toString().orEmpty())
-    private val count = JBTextField("1")
+    private val count = JBTextField(if (capability == "fluids") "" else "1")
     private val nbt = JBTextArea(initial.nbt.orEmpty())
     private val renderVariant = JComboBox(arrayOf("picker", "inline", "default"))
     private val entries = DefaultListModel<Entry>()
@@ -62,7 +62,7 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
         resultList.fixedCellWidth = 104
         resultList.fixedCellHeight = 96
         resultList.cellRenderer = object : DefaultListCellRenderer() {
-            override fun getListCellRendererComponent(list: javax.swing.JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
                 val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus) as JLabel
                 val entry = value as? Entry
                 component.horizontalAlignment = JLabel.CENTER
@@ -71,14 +71,14 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
                 component.icon = entry?.let { gridIcons[it.id] }
                 component.text = entry?.label?.takeIf { it.isNotBlank() } ?: entry?.id.orEmpty()
                 component.toolTipText = entry?.id
-                component.border = com.intellij.util.ui.JBUI.Borders.empty(5)
+                component.border = JBUI.Borders.empty(5)
                 return component
             }
         }
         resultList.dragEnabled = true
         resultList.transferHandler = object : TransferHandler() {
             override fun getSourceActions(component: JComponent): Int = COPY
-            override fun createTransferable(component: JComponent) = resultList.selectedValue?.id?.let(::StringSelection)
+            override fun createTransferable(component: JComponent) = resultList.selectedValue?.id?.let { GuideNhContentTransferable(it, capability) }
         }
         query.document.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(event: DocumentEvent) = loadEntries(query.text)
@@ -101,9 +101,9 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
     }
 
     val selection: GuideNhItemStackSelection? get() = resultList.selectedValue?.id?.let { id ->
-        val parsedMeta = meta.text.trim().takeIf(String::isNotEmpty)?.toIntOrNull()
+        val parsedMeta = if (capability == "fluids") null else meta.text.trim().takeIf(String::isNotEmpty)?.toIntOrNull()
         val parsedCount = count.text.trim().toIntOrNull()?.coerceIn(1, 64) ?: 1
-        GuideNhItemStackSelection(id, parsedMeta, parsedCount, nbt.text.trim().takeIf(String::isNotEmpty), renderVariant.selectedItem as String)
+        GuideNhItemStackSelection(id, parsedMeta, parsedCount, nbt.text.trim().takeIf(String::isNotEmpty), renderVariant.selectedItem as String, if (capability == "fluids") count.text.trim().toIntOrNull()?.takeIf { it >= 0 } else null)
     }
 
     override fun createCenterPanel(): JComponent {
@@ -119,14 +119,14 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
             }, BorderLayout.CENTER)
         }
         val right = JPanel(BorderLayout(0, 10)).apply {
-            border = com.intellij.util.ui.JBUI.Borders.emptyLeft(14)
+            border = JBUI.Borders.emptyLeft(14)
             add(header, BorderLayout.NORTH)
-            add(JBScrollPane(previewTooltip).apply { border = com.intellij.util.ui.JBUI.Borders.empty() }, BorderLayout.CENTER)
+            add(JBScrollPane(previewTooltip).apply { border = JBUI.Borders.empty() }, BorderLayout.CENTER)
             preferredSize = Dimension(360, 360)
         }
         val controls = JPanel(GridLayout(0, 2, 8, 6)).apply {
-            add(JBLabel(MyMessageBundle.message("picker.meta"))); add(meta)
-            add(JBLabel(MyMessageBundle.message("picker.count"))); add(count)
+            if (capability == "items") { add(JBLabel(MyMessageBundle.message("picker.meta"))); add(meta) }
+            add(JBLabel(MyMessageBundle.message(if (capability == "fluids") "picker.amount" else "picker.count"))); add(count)
             add(JBLabel(MyMessageBundle.message("picker.variant"))); add(renderVariant)
             add(JBLabel(MyMessageBundle.message("picker.nbt"))); add(JBScrollPane(nbt).apply { preferredSize = Dimension(180, 58) })
         }
@@ -141,7 +141,7 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
     private fun loadEntries(prefix: String) {
         val version = requestVersion.incrementAndGet()
         ApplicationManager.getApplication().executeOnPooledThread {
-            val found = runCatching { GuideNhRuntimeBridgeService.get().previewSearch("items", prefix, 80, mapOf("source" to "picker")) }
+            val found = runCatching { GuideNhRuntimeBridgeService.get().previewSearch(capability, prefix, 80, mapOf("source" to "picker")) }
                 .getOrDefault(emptyList())
                 .mapNotNull { json -> json.get("id")?.asString?.let { Entry(it, json.get("label")?.asString, json.get("detail")?.asString) } }
             ApplicationManager.getApplication().invokeLater {
@@ -160,7 +160,7 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
             ApplicationManager.getApplication().executeOnPooledThread {
                 val icon = runCatching {
                     GuideNhRuntimeBridgeService.get().previewResolve(
-                        "items", entry.id, count = 1, renderVariant = "picker-grid", filters = mapOf("source" to "picker")
+                        capability, entry.id, count = if (capability == "items") 1 else null, renderVariant = "picker-grid", filters = mapOf("source" to "picker")
                     )?.stringValue("iconPngBase64")?.let(::decodeGridIcon)
                 }.getOrNull() ?: return@executeOnPooledThread
                 ApplicationManager.getApplication().invokeLater {
@@ -180,9 +180,10 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
         previewTooltip.text = MyMessageBundle.message("picker.loading")
         ApplicationManager.getApplication().executeOnPooledThread {
             val preview = runCatching {
-                val previewId = entry.id + meta.text.trim().toIntOrNull()?.let { ":$it" }.orEmpty()
+                val previewId = entry.id + if (capability == "items") meta.text.trim().toIntOrNull()?.let { ":$it" }.orEmpty() else ""
                 GuideNhRuntimeBridgeService.get().previewResolve(
-                    "items", previewId, count = count.text.trim().toIntOrNull()?.coerceIn(1, 64) ?: 1,
+                    capability, previewId, count = if (capability == "items") count.text.trim().toIntOrNull()?.coerceIn(1, 64) ?: 1 else null,
+                    amount = if (capability == "fluids") count.text.trim().toIntOrNull()?.takeIf { it >= 0 } else null,
                     nbt = nbt.text.trim().takeIf(String::isNotEmpty), renderVariant = renderVariant.selectedItem as String,
                     filters = mapOf("source" to "picker")
                 )
@@ -200,6 +201,7 @@ class GuideNhItemPickerDialog(project: Project, initialValue: String) : DialogWr
                         }
                     }
                     preview?.intValue("meta")?.let { append(MyMessageBundle.message("documentation.meta", it)).append('\n') }
+                    preview?.intValue("amount")?.let { append(MyMessageBundle.message("documentation.amount", it)).append('\n') }
                     preview?.intValue("count")?.let { append(MyMessageBundle.message("documentation.count", it)).append('\n') }
                     preview?.stringValue("nbt")?.let { append("NBT: ").append(it) }
                 }.trim().ifBlank { MyMessageBundle.message("picker.no.tooltip") }

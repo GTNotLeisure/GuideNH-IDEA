@@ -37,6 +37,7 @@ class GuideNhRuntimeSemanticIndex(private val project: Project) {
 
     fun resolve(reference: GuideNhReference): PsiElement? {
         val capability = when (reference.kind) {
+            GuideNhReferenceKind.FLUID -> "fluids"
             GuideNhReferenceKind.ITEM -> "items"
             GuideNhReferenceKind.ORE -> "ores"
             else -> return null
@@ -75,7 +76,7 @@ class GuideNhRuntimeSemanticIndex(private val project: Project) {
     private fun key(capability: String, id: String) = "${capability.lowercase()}\u0000${id.lowercase()}"
 
     companion object {
-        private val PERSISTED_CAPABILITIES = setOf("items", "ores")
+        private val PERSISTED_CAPABILITIES = setOf("items", "fluids", "ores")
         fun get(project: Project): GuideNhRuntimeSemanticIndex = project.getService(GuideNhRuntimeSemanticIndex::class.java)
     }
 }

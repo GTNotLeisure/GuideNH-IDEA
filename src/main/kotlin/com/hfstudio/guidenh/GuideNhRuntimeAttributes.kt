@@ -1,6 +1,11 @@
 package com.hfstudio.guidenh
 
 private val runtimeAttributeCapabilities = mapOf(
+    "FluidImage.id" to "fluids", "FluidLink.id" to "fluids", "FluidIcon.id" to "fluids",
+    "InputAnnotation.fluid" to "fluids", "ContentTabs.iconFluid" to "fluids", "ContentTabs.icon_fluid" to "fluids",
+    "Series.iconFluid" to "fluids", "LineSeries.iconFluid" to "fluids", "Slice.iconFluid" to "fluids",
+    "Recipe.fluid" to "fluids", "Usage.fluid" to "fluids", "RecipeFor.fluid" to "fluids",
+    "RecipeUsage.fluid" to "fluids", "RecipesFor.fluid" to "fluids", "RecipesUsage.fluid" to "fluids",
     "NeiRecipeLink.id" to "items",
     "ItemLink.id" to "items", "ItemLink.ore" to "ores",
     "ItemImage.id" to "items", "ItemImage.ore" to "ores",
@@ -15,7 +20,7 @@ private val runtimeAttributeCapabilities = mapOf(
     "Entity.id" to "entities", "ImportStructureLib.controller" to "structurelib", "SubPages.id" to "pages"
 )
 
-private val typeCapabilities = mapOf("item" to "items", "ore" to "ores", "page" to "pages")
+private val typeCapabilities = mapOf("fluid" to "fluids", "item" to "items", "ore" to "ores", "page" to "pages")
 
 fun resolveGuideNhRuntimeCapability(tagName: String?, attributeName: String, schema: GuideNhAttributeSchema? = null): String? =
     when {
@@ -49,6 +54,8 @@ fun guideNhRuntimeFilters(text: String, offset: Int, tagName: String?, attribute
 }
 
 fun resolveGuideNhFrontmatterRuntimeCapability(path: String): String? = mapOf(
+    "fluid_id" to "fluids", "fluid_ids" to "fluids",
+    "navigation.icon_fluid" to "fluids", "navigation.icon_fluids" to "fluids",
     "item_id" to "items", "item_ids" to "items", "ore_ids" to "ores", "quest_ids" to "quests",
     "categories" to "categories", "navigation.parent" to "pages", "navigation.required_mod" to "mods",
     "navigation.required_mods" to "mods", "navigation.excluded_mod" to "mods", "navigation.excluded_mods" to "mods",

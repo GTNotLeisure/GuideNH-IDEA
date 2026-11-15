@@ -62,6 +62,74 @@
       ],
       "description": "Insert a recipe."
     },
+    "guidenh.inputAnnotation": {
+      "prefix": "InputAnnotation",
+      "body": [
+        "<InputAnnotation pos=\"$00.5 1.5 0.5\" inputType=\"lmb\" />"
+      ],
+      "description": "Insert a <InputAnnotation> tag."
+    },
+    "guidenh.blockStats": {
+      "prefix": "BlockStats",
+      "body": [
+        "<BlockStats corner=\"topRight\">",
+        "  $0",
+        "</BlockStats>"
+      ],
+      "description": "Insert a <BlockStats> tag."
+    },
+    "guidenh.columnChart": {
+      "prefix": "ColumnChart",
+      "body": [
+        "<ColumnChart title=\"$0Total\" width=\"360\" height=\"220\">",
+        "  <Series name=\"A\" data=\"1 2 3\" />",
+        "</ColumnChart>"
+      ],
+      "description": "Insert a <ColumnChart> tag."
+    },
+    "guidenh.lineChart": {
+      "prefix": "LineChart",
+      "body": [
+        "<LineChart title=\"$0Trend\" width=\"360\" height=\"220\">",
+        "  <Series name=\"A\" data=\"1 2 3\" />",
+        "</LineChart>"
+      ],
+      "description": "Insert a <LineChart> tag."
+    },
+    "guidenh.functionGraph": {
+      "prefix": "FunctionGraph",
+      "body": [
+        "<FunctionGraph width=\"360\" height=\"220\" xRange=\"-6..6\" yRange=\"-3..3\">",
+        "  <Plot expr=\"$0sin(x)\" color=\"#ff5566\" />",
+        "</FunctionGraph>"
+      ],
+      "description": "Insert a <FunctionGraph> tag."
+    },
+    "guidenh.blockStat": {
+      "prefix": "BlockStat",
+      "body": [
+        "<BlockStat item=\"$0\" count=\"1\" />"
+      ],
+      "description": "Insert a <BlockStat> tag."
+    },
+    "guidenh.barChart": {
+      "prefix": "BarChart",
+      "body": [
+        "<BarChart title=\"$0Total\" width=\"360\" height=\"220\">",
+        "  <Series name=\"A\" data=\"1 2 3\" />",
+        "</BarChart>"
+      ],
+      "description": "Insert a <BarChart> tag."
+    },
+    "guidenh.pieChart": {
+      "prefix": "PieChart",
+      "body": [
+        "<PieChart title=\"$0Share\" width=\"320\" height=\"220\">",
+        "  <Slice name=\"A\" value=\"1\" />",
+        "</PieChart>"
+      ],
+      "description": "Insert a <PieChart> tag."
+    },
     "guidenh.neiRecipeLink": {
       "prefix": "NeiRecipeLink",
       "body": [
@@ -89,6 +157,27 @@
         "&[$0Check usages](nei:usage?id=gregtech:gt.blockmachines:236&handlerId=gt.recipe.cokeoven)"
       ],
       "description": "NEI usage link"
+    },
+    "guidenh.fluidImage": {
+      "prefix": "FluidImage",
+      "body": [
+        "<FluidImage id=\"$0water\" />"
+      ],
+      "description": "Insert a <FluidImage> tag."
+    },
+    "guidenh.fluidLink": {
+      "prefix": "FluidLink",
+      "body": [
+        "<FluidLink id=\"$0water\" showIcon=\"left\" />"
+      ],
+      "description": "Insert a <FluidLink> tag."
+    },
+    "guidenh.fluidIcon": {
+      "prefix": "FluidIcon",
+      "body": [
+        "<FluidIcon id=\"$0water\" />"
+      ],
+      "description": "Insert a <FluidIcon> tag."
     }
   }
 }

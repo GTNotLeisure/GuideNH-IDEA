@@ -620,6 +620,24 @@
       "children": [],
       "snippets": []
     },
+    "caption": {
+      "name": "caption",
+      "kind": "any",
+      "description": "HTML table caption element.",
+      "attributes": {
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        }
+      },
+      "children": [],
+      "snippets": []
+    },
     "Case": {
       "name": "Case",
       "kind": "any",
@@ -710,6 +728,104 @@
       "description": "Generated from GuideNH code compiler source.",
       "attributes": {},
       "children": [],
+      "snippets": []
+    },
+    "col": {
+      "name": "col",
+      "kind": "inline",
+      "description": "HTML table col element.",
+      "attributes": {
+        "width": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "span": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [],
+      "snippets": []
+    },
+    "colgroup": {
+      "name": "colgroup",
+      "kind": "any",
+      "description": "HTML table colgroup element.",
+      "attributes": {
+        "width": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "span": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "col"
+      ],
       "snippets": []
     },
     "Color": {
@@ -983,6 +1099,14 @@
         },
         "width": {
           "type": "number",
+          "valueStyle": "string"
+        },
+        "iconFluid": {
+          "type": "fluid",
+          "valueStyle": "string"
+        },
+        "icon_fluid": {
+          "type": "fluid",
           "valueStyle": "string"
         },
         "wrap": {
@@ -1470,6 +1594,135 @@
         "SoundArea"
       ],
       "snippets": []
+    },
+    "FluidIcon": {
+      "name": "FluidIcon",
+      "kind": "any",
+      "description": "Native Forge fluid content using registry names.",
+      "attributes": {
+        "id": {
+          "type": "fluid",
+          "required": true,
+          "valueStyle": "string"
+        },
+        "amount": {
+          "type": "number",
+          "valueStyle": "expression"
+        },
+        "nbt": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "showTooltip": {
+          "type": "boolean"
+        },
+        "noTooltip": {
+          "type": "boolean"
+        }
+      },
+      "children": [],
+      "snippets": [
+        "<FluidIcon id=\"${1:water}\" />"
+      ]
+    },
+    "FluidImage": {
+      "name": "FluidImage",
+      "kind": "block",
+      "description": "Native Forge fluid content using registry names.",
+      "attributes": {
+        "id": {
+          "type": "fluid",
+          "required": true,
+          "valueStyle": "string"
+        },
+        "amount": {
+          "type": "number",
+          "valueStyle": "expression"
+        },
+        "nbt": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "showTooltip": {
+          "type": "boolean"
+        },
+        "noTooltip": {
+          "type": "boolean"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "showIcon": {
+          "type": "boolean"
+        },
+        "yOffset": {
+          "type": "number"
+        },
+        "labelYOffset": {
+          "type": "number"
+        },
+        "wrap": {
+          "type": "string"
+        },
+        "align": {
+          "type": "string"
+        },
+        "float": {
+          "type": "string"
+        }
+      },
+      "children": [],
+      "snippets": [
+        "<FluidImage id=\"${1:water}\" />"
+      ]
+    },
+    "FluidLink": {
+      "name": "FluidLink",
+      "kind": "inline",
+      "description": "Native Forge fluid content using registry names.",
+      "attributes": {
+        "id": {
+          "type": "fluid",
+          "required": true,
+          "valueStyle": "string"
+        },
+        "amount": {
+          "type": "number",
+          "valueStyle": "expression"
+        },
+        "nbt": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "showTooltip": {
+          "type": "boolean"
+        },
+        "noTooltip": {
+          "type": "boolean"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "showIcon": {
+          "type": "string"
+        },
+        "showText": {
+          "type": "boolean"
+        },
+        "linksTo": {
+          "type": "page"
+        }
+      },
+      "children": [],
+      "snippets": [
+        "<FluidLink id=\"${1:water}\" showIcon=\"left\" />"
+      ]
     },
     "FootnoteList": {
       "name": "FootnoteList",
@@ -2459,6 +2712,14 @@
       "kind": "any",
       "description": "Generated from GuideNH InputAnnotation compiler source.",
       "attributes": {
+        "amount": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "fluid": {
+          "type": "fluid",
+          "valueStyle": "string"
+        },
         "inputType": {
           "type": "enum",
           "values": [
@@ -2476,6 +2737,10 @@
             "sneak",
             "ctrl"
           ],
+          "valueStyle": "string"
+        },
+        "nbt": {
+          "type": "string",
           "valueStyle": "string"
         },
         "pos": {
@@ -2556,7 +2821,8 @@
         }
       },
       "children": [
-        "ItemIcon"
+        "ItemIcon",
+        "FluidIcon"
       ],
       "snippets": []
     },
@@ -3091,6 +3357,10 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "iconFluid": {
+          "type": "fluid",
+          "valueStyle": "string"
+        },
         "iconImage": {
           "type": "string",
           "valueStyle": "string"
@@ -3207,6 +3477,41 @@
       ],
       "snippets": []
     },
+    "NeiRecipeLink": {
+      "name": "NeiRecipeLink",
+      "kind": "inline",
+      "description": "Generated from GuideNH NEI inline navigation. Opens NEI in game; browser previews are inactive.",
+      "attributes": {
+        "handlerId": {
+          "type": "string",
+          "valueStyle": "string",
+          "description": "Exact overlay or handler ID, case-insensitive. Required in handler mode."
+        },
+        "id": {
+          "type": "item",
+          "valueStyle": "string",
+          "description": "Required for recipes and usage; forbidden in handler mode."
+        },
+        "mode": {
+          "type": "enum",
+          "values": [
+            "handler",
+            "recipes",
+            "usage"
+          ],
+          "valueStyle": "string",
+          "description": "Defaults to recipes with id, otherwise handler."
+        },
+        "title": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [],
+      "snippets": [
+        "<NeiRecipeLink handlerId=\"${1:gt.recipe.cokeoven}\">${2:Check NEI}</NeiRecipeLink>"
+      ]
+    },
     "NodeContent": {
       "name": "NodeContent",
       "kind": "block",
@@ -3271,6 +3576,97 @@
       },
       "children": [],
       "snippets": []
+    },
+    "OutlineAnnotation": {
+      "name": "OutlineAnnotation",
+      "kind": "any",
+      "description": "Generated from GuideNH OutlineAnnotation compiler source.",
+      "attributes": {
+        "alwaysOnTop": {
+          "type": "boolean",
+          "valueStyle": "string"
+        },
+        "color": {
+          "type": "color"
+        },
+        "colorMode": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "solid",
+            "rainbow"
+          ]
+        },
+        "colorPeriod": {
+          "type": "number",
+          "valueStyle": "expression",
+          "description": "Positive finite cycle duration in seconds. Defaults to 2.4."
+        },
+        "entity": {
+          "type": "string"
+        },
+        "max": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "min": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "mode": {
+          "type": "enum",
+          "values": [
+            "auto",
+            "geometry",
+            "cutout",
+            "bounds"
+          ]
+        },
+        "pos": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "pulse": {
+          "type": "boolean",
+          "valueStyle": "string"
+        },
+        "pulsePeriod": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "showWhenChannels": {
+          "type": "string"
+        },
+        "showWhenStructure": {
+          "type": "string"
+        },
+        "showWhenTier": {
+          "type": "string"
+        },
+        "target": {
+          "type": "enum",
+          "values": [
+            "blocks",
+            "entities",
+            "all"
+          ]
+        },
+        "thickness": {
+          "type": "number",
+          "valueStyle": "string"
+        }
+      },
+      "children": [],
+      "snippets": [],
+      "preferredChildren": [
+        "BlockAnnotation",
+        "BoxAnnotation",
+        "LineAnnotation",
+        "DiamondAnnotation",
+        "OutlineAnnotation",
+        "TextAnnotation",
+        "BlockAnnotationTemplate"
+      ]
     },
     "p": {
       "name": "p",
@@ -3898,6 +4294,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -3924,13 +4326,19 @@
         },
         "id": {
           "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string",
-          "required": true,
           "description": "Recipe output or recipe id."
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -3939,6 +4347,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -3971,6 +4382,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -3994,12 +4411,19 @@
           "description": "Handler ids to keep even when a blacklist names them. Comma separated."
         },
         "id": {
-          "type": "string",
+          "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string"
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -4008,6 +4432,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -4038,6 +4465,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -4061,12 +4494,19 @@
           "description": "Handler ids to keep even when a blacklist names them. Comma separated."
         },
         "id": {
-          "type": "string",
+          "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string"
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -4075,6 +4515,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -4105,6 +4548,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -4128,12 +4577,19 @@
           "description": "Handler ids to keep even when a blacklist names them. Comma separated."
         },
         "id": {
-          "type": "string",
+          "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string"
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -4142,6 +4598,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -4172,6 +4631,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -4195,12 +4660,19 @@
           "description": "Handler ids to keep even when a blacklist names them. Comma separated."
         },
         "id": {
-          "type": "string",
+          "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string"
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -4209,6 +4681,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -4756,6 +5231,10 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "iconFluid": {
+          "type": "fluid",
+          "valueStyle": "string"
+        },
         "iconImage": {
           "type": "string",
           "valueStyle": "string"
@@ -4789,6 +5268,10 @@
         },
         "icon": {
           "type": "string",
+          "valueStyle": "string"
+        },
+        "iconFluid": {
+          "type": "fluid",
           "valueStyle": "string"
         },
         "iconImage": {
@@ -5158,6 +5641,188 @@
       "children": [],
       "snippets": []
     },
+    "table": {
+      "name": "table",
+      "kind": "block",
+      "description": "HTML table with column width hints and merged cells.",
+      "attributes": {
+        "widths": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "header": {
+          "type": "boolean",
+          "valueStyle": "string"
+        },
+        "align": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "width": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "border": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "cellpadding": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "cellspacing": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "summary": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "frame": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "rules": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bordercolor": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "caption",
+        "colgroup",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr"
+      ],
+      "snippets": []
+    },
+    "tbody": {
+      "name": "tbody",
+      "kind": "any",
+      "description": "HTML table tbody element.",
+      "attributes": {
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "tr"
+      ],
+      "snippets": []
+    },
+    "td": {
+      "name": "td",
+      "kind": "any",
+      "description": "HTML table td element.",
+      "attributes": {
+        "colspan": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "rowspan": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "headers": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "width": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "height": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "axis": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "color": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "background": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "style": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [],
+      "snippets": []
+    },
     "Template": {
       "name": "Template",
       "kind": "any",
@@ -5288,6 +5953,180 @@
         "BlockAnnotationTemplate"
       ]
     },
+    "tfoot": {
+      "name": "tfoot",
+      "kind": "any",
+      "description": "HTML table tfoot element.",
+      "attributes": {
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "tr"
+      ],
+      "snippets": []
+    },
+    "th": {
+      "name": "th",
+      "kind": "any",
+      "description": "HTML table th element.",
+      "attributes": {
+        "colspan": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "rowspan": {
+          "type": "number",
+          "valueStyle": "string"
+        },
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "headers": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "width": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "height": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "axis": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "color": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "background": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "style": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "scope": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "col",
+            "row",
+            "colgroup",
+            "rowgroup"
+          ]
+        },
+        "abbr": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [],
+      "snippets": []
+    },
+    "thead": {
+      "name": "thead",
+      "kind": "any",
+      "description": "HTML table thead element.",
+      "attributes": {
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "tr"
+      ],
+      "snippets": []
+    },
     "Tier": {
       "name": "Tier",
       "kind": "any",
@@ -5325,6 +6164,49 @@
         }
       },
       "children": [],
+      "snippets": []
+    },
+    "tr": {
+      "name": "tr",
+      "kind": "any",
+      "description": "HTML table tr element.",
+      "attributes": {
+        "align": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "left",
+            "center",
+            "right"
+          ]
+        },
+        "valign": {
+          "type": "enum",
+          "valueStyle": "string",
+          "values": [
+            "top",
+            "middle",
+            "bottom",
+            "baseline"
+          ]
+        },
+        "char": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "charoff": {
+          "type": "string",
+          "valueStyle": "string"
+        },
+        "bgcolor": {
+          "type": "string",
+          "valueStyle": "string"
+        }
+      },
+      "children": [
+        "th",
+        "td"
+      ],
       "snippets": []
     },
     "Trim": {
@@ -5494,6 +6376,12 @@
           "type": "string",
           "valueStyle": "string"
         },
+        "fluid": {
+          "type": "fluid",
+          "requiredWhenMissing": [
+            "id"
+          ]
+        },
         "handlerBlacklist": {
           "type": "string",
           "valueStyle": "string",
@@ -5517,12 +6405,19 @@
           "description": "Handler ids to keep even when a blacklist names them. Comma separated."
         },
         "id": {
-          "type": "string",
+          "type": "item",
+          "required": false,
+          "requiredWhenMissing": [
+            "fluid"
+          ],
           "valueStyle": "string"
         },
         "input": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "inputFluid": {
+          "type": "fluid"
         },
         "limit": {
           "type": "string",
@@ -5531,6 +6426,9 @@
         "output": {
           "type": "string",
           "valueStyle": "string"
+        },
+        "outputFluid": {
+          "type": "fluid"
         },
         "recipeIndex": {
           "type": "string",
@@ -5588,656 +6486,6 @@
       },
       "children": [],
       "snippets": []
-    },
-    "table": {
-      "name": "table",
-      "kind": "block",
-      "description": "HTML table with column width hints and merged cells.",
-      "attributes": {
-        "widths": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "header": {
-          "type": "boolean",
-          "valueStyle": "string"
-        },
-        "align": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "width": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "border": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "cellpadding": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "cellspacing": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "summary": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "frame": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "rules": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bordercolor": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "caption",
-        "colgroup",
-        "thead",
-        "tbody",
-        "tfoot",
-        "tr"
-      ],
-      "snippets": []
-    },
-    "caption": {
-      "name": "caption",
-      "kind": "any",
-      "description": "HTML table caption.",
-      "attributes": {
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        }
-      },
-      "children": [],
-      "snippets": []
-    },
-    "colgroup": {
-      "name": "colgroup",
-      "kind": "any",
-      "description": "HTML table column group.",
-      "attributes": {
-        "width": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "span": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "col"
-      ],
-      "snippets": []
-    },
-    "col": {
-      "name": "col",
-      "kind": "any",
-      "description": "HTML table column.",
-      "attributes": {
-        "width": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "span": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [],
-      "snippets": []
-    },
-    "thead": {
-      "name": "thead",
-      "kind": "any",
-      "description": "HTML table thead section.",
-      "attributes": {
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "tr"
-      ],
-      "snippets": []
-    },
-    "tbody": {
-      "name": "tbody",
-      "kind": "any",
-      "description": "HTML table tbody section.",
-      "attributes": {
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "tr"
-      ],
-      "snippets": []
-    },
-    "tfoot": {
-      "name": "tfoot",
-      "kind": "any",
-      "description": "HTML table tfoot section.",
-      "attributes": {
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "tr"
-      ],
-      "snippets": []
-    },
-    "tr": {
-      "name": "tr",
-      "kind": "any",
-      "description": "HTML table row.",
-      "attributes": {
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [
-        "th",
-        "td"
-      ],
-      "snippets": [],
-      "align": {
-        "type": "enum",
-        "valueStyle": "string",
-        "values": [
-          "left",
-          "center",
-          "right"
-        ]
-      }
-    },
-    "td": {
-      "name": "td",
-      "kind": "any",
-      "description": "HTML table data cell.",
-      "attributes": {
-        "colspan": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "rowspan": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "headers": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "width": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "height": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "axis": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "color": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "background": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "style": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [],
-      "snippets": []
-    },
-    "th": {
-      "name": "th",
-      "kind": "any",
-      "description": "HTML table header cell.",
-      "attributes": {
-        "colspan": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "rowspan": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "align": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "left",
-            "center",
-            "right"
-          ]
-        },
-        "valign": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "top",
-            "middle",
-            "bottom",
-            "baseline"
-          ]
-        },
-        "headers": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "width": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "height": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "axis": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "char": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "charoff": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "bgcolor": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "color": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "background": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "style": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "scope": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "col",
-            "row",
-            "colgroup",
-            "rowgroup"
-          ]
-        },
-        "abbr": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [],
-      "snippets": []
-    },
-    "OutlineAnnotation": {
-      "name": "OutlineAnnotation",
-      "kind": "any",
-      "description": "Generated from GuideNH OutlineAnnotation compiler source.",
-      "attributes": {
-        "alwaysOnTop": {
-          "type": "boolean",
-          "valueStyle": "string"
-        },
-        "color": {
-          "type": "color"
-        },
-        "colorMode": {
-          "type": "enum",
-          "valueStyle": "string",
-          "values": [
-            "solid",
-            "rainbow"
-          ]
-        },
-        "colorPeriod": {
-          "type": "number",
-          "valueStyle": "expression",
-          "description": "Positive finite cycle duration in seconds. Defaults to 2.4."
-        },
-        "entity": {
-          "type": "string"
-        },
-        "max": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "min": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "mode": {
-          "type": "enum",
-          "values": [
-            "auto",
-            "geometry",
-            "cutout",
-            "bounds"
-          ]
-        },
-        "pos": {
-          "type": "string",
-          "valueStyle": "string"
-        },
-        "pulse": {
-          "type": "boolean",
-          "valueStyle": "string"
-        },
-        "pulsePeriod": {
-          "type": "number",
-          "valueStyle": "string"
-        },
-        "showWhenChannels": {
-          "type": "string"
-        },
-        "showWhenStructure": {
-          "type": "string"
-        },
-        "showWhenTier": {
-          "type": "string"
-        },
-        "target": {
-          "type": "enum",
-          "values": [
-            "blocks",
-            "entities",
-            "all"
-          ]
-        },
-        "thickness": {
-          "type": "number",
-          "valueStyle": "string"
-        }
-      },
-      "children": [],
-      "snippets": [],
-      "preferredChildren": [
-        "BlockAnnotation",
-        "BoxAnnotation",
-        "LineAnnotation",
-        "DiamondAnnotation",
-        "OutlineAnnotation",
-        "TextAnnotation",
-        "BlockAnnotationTemplate"
-      ]
-    },
-    "NeiRecipeLink": {
-      "name": "NeiRecipeLink",
-      "kind": "inline",
-      "description": "Generated from GuideNH NEI inline navigation. Opens NEI in game; browser previews are inactive.",
-      "attributes": {
-        "handlerId": {
-          "type": "string",
-          "valueStyle": "string",
-          "description": "Exact overlay or handler ID, case-insensitive. Required in handler mode."
-        },
-        "id": {
-          "type": "item",
-          "valueStyle": "string",
-          "description": "Required for recipes and usage; forbidden in handler mode."
-        },
-        "mode": {
-          "type": "enum",
-          "values": [
-            "handler",
-            "recipes",
-            "usage"
-          ],
-          "valueStyle": "string",
-          "description": "Defaults to recipes with id, otherwise handler."
-        },
-        "title": {
-          "type": "string",
-          "valueStyle": "string"
-        }
-      },
-      "children": [],
-      "snippets": [
-        "<NeiRecipeLink handlerId=\"${1:gt.recipe.cokeoven}\">${2:Check NEI}</NeiRecipeLink>"
-      ]
     }
   }
 }

@@ -67,6 +67,7 @@ class GuideNhAnnotator : Annotator {
                 }
             }
             validateFloatingImage(tag, holder)
+            validateFluid(tag, parent, holder)
             validateNeiLink(tag, source, holder)
             if (!tag.selfClosing && tagSchema != null) stack.addLast(tag)
         }
@@ -106,6 +107,34 @@ class GuideNhAnnotator : Annotator {
         if (reference.kind == GuideNhReferenceKind.PAGE) return true
         if (reference.value.endsWith(".md", true)) return true
         return isNamespacedResource(reference.value)
+    }
+
+    private fun validateFluid(tag: GuideNhTag, parent: GuideNhTag?, holder: AnnotationHolder) {
+        val name = tag.name.lowercase()
+        val fluidTag = name in setOf("fluidimage", "fluidlink", "fluidicon")
+        val recipe = name in setOf("recipe", "usage", "recipefor", "recipeusage", "recipesfor", "recipesusage")
+        val input = name == "inputannotation"
+        val attrs = tag.attributes.associate { it.name to it.value.orEmpty() }
+        fun has(key: String) = !attrs[key].isNullOrBlank()
+        fun report(key: String, vararg values: Any) = error(holder, tag.nameRange, MyMessageBundle.message(key, *values))
+        if (name == "fluidicon" && parent?.name?.equals("ItemGrid", true) != true) report("diagnostic.fluid.parent")
+        if ((recipe && has("id") && has("fluid")) || (input && has("item") && has("fluid"))) {
+            report("diagnostic.attributes.exclusive", tag.name, if (recipe) "id" else "item", "fluid")
+        }
+        if (input && !has("fluid")) {
+            listOf("amount", "nbt").filter(::has).forEach { report("diagnostic.attribute.requires", tag.name, it, "fluid") }
+        }
+        if (fluidTag || input && has("fluid")) {
+            if (has("amount")) {
+                val amount = attrs["amount"]?.toBigDecimalOrNull()
+                val valid = amount?.let { runCatching { it.intValueExact() >= 0 }.getOrDefault(false) } ?: false
+                if (!valid) report("diagnostic.fluid.amount")
+            }
+            if (has("scale")) {
+                val scale = attrs["scale"]?.toFloatOrNull()
+                if (scale == null || !scale.isFinite() || scale <= 0f) report("diagnostic.fluid.scale")
+            }
+        }
     }
 
     private fun validateNeiLink(tag: GuideNhTag, source: String, holder: AnnotationHolder) {

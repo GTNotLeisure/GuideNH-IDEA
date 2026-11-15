@@ -24,7 +24,7 @@ data class GuideNhDocumentModel(
     val references: List<GuideNhReference>
 )
 
-enum class GuideNhReferenceKind { PAGE, RESOURCE, ITEM, ORE }
+enum class GuideNhReferenceKind { PAGE, RESOURCE, ITEM, FLUID, ORE }
 
 data class GuideNhReference(
     val kind: GuideNhReferenceKind,

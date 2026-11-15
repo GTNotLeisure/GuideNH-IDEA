@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.util.TextRange
 import com.hfstudio.MyMessageBundle
 
 class ConnectRuntimeAction : AnAction() {
@@ -28,7 +29,7 @@ class PickItemStackAction : AnAction() {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
         val caret = editor.caretModel.offset
         val context = GuideNhItemStackContexts.findAt(editor.document.charsSequence, caret)
-        val dialog = GuideNhItemPickerDialog(project, context?.value.orEmpty().ifBlank { "minecraft:" })
+        val dialog = GuideNhItemPickerDialog(project, context?.value.orEmpty().ifBlank { "minecraft:" }, context?.capability ?: "items")
         if (!dialog.showAndGet()) return
         val selection = dialog.selection
         if (selection != null) {
@@ -39,12 +40,13 @@ class PickItemStackAction : AnAction() {
                     val hasMeta = supported.keys.any { it.equals("meta", true) }
                     val hasNbt = supported.keys.any { it.equals("nbt", true) }
                     var itemValue = selection.id
-                    if (!hasMeta) selection.meta?.let { itemValue += ":$it" }
-                    if (!hasNbt) selection.nbt?.let { itemValue += ":$it" }
-                    var markup = editor.document.getText(com.intellij.openapi.util.TextRange(context.tagStart, context.tagEndExclusive))
+                    if (context.capability == "items" && !hasMeta) selection.meta?.let { itemValue += ":$it" }
+                    if (context.capability == "items" && !hasNbt) selection.nbt?.let { itemValue += ":$it" }
+                    var markup = editor.document.getText(TextRange(context.tagStart, context.tagEndExclusive))
                     markup = upsertGuideNhAttribute(markup, context.attributeName, itemValue)
                     if (hasMeta) selection.meta?.let { markup = upsertGuideNhAttribute(markup, "meta", it.toString()) }
                     if (supported.keys.any { it.equals("count", true) }) markup = upsertGuideNhAttribute(markup, "count", selection.count.toString(), expression = true)
+                    if (supported.keys.any { it.equals("amount", true) }) selection.amount?.let { markup = upsertGuideNhAttribute(markup, "amount", it.toString(), expression = true) }
                     if (hasNbt) selection.nbt?.let { markup = upsertGuideNhAttribute(markup, "nbt", it) }
                     editor.document.replaceString(context.tagStart, context.tagEndExclusive, markup)
                 } else {

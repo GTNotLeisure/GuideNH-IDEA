@@ -40,20 +40,20 @@ class GuideNhDocumentationProvider : AbstractDocumentationProvider() {
         return when (reference.kind) {
             GuideNhReferenceKind.PAGE -> GuideNhWorkspaceIndex.get(file.project).findPage(reference.value, file.virtualFile)?.let { "<h3>${escapeHtml(it.relativePath)}</h3><p>${MyMessageBundle.message("documentation.page")}</p>" }
             GuideNhReferenceKind.RESOURCE -> GuideNhWorkspaceIndex.get(file.project).findResource(reference.value, file.virtualFile)?.let { "<h3>${escapeHtml(it.relativePath)}</h3><p>${MyMessageBundle.message("documentation.resource")}</p><code>${escapeHtml(it.file.url)}</code>" }
-            GuideNhReferenceKind.ITEM, GuideNhReferenceKind.ORE -> {
-                val capability = if (reference.kind == GuideNhReferenceKind.ITEM) "items" else "ores"
+            GuideNhReferenceKind.ITEM, GuideNhReferenceKind.FLUID, GuideNhReferenceKind.ORE -> {
+                val capability = when (reference.kind) { GuideNhReferenceKind.ITEM -> "items"; GuideNhReferenceKind.FLUID -> "fluids"; else -> "ores" }
                 val runtime = GuideNhRuntimeBridgeService.get()
-                if (reference.kind == GuideNhReferenceKind.ITEM) {
-                    val preview = runtime.previewCached("items", reference.value, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
+                if (reference.kind != GuideNhReferenceKind.ORE) {
+                    val preview = runtime.previewCached(capability, reference.value, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
                     if (preview != null) return formatItemPreview(reference.value, preview)
-                    runtime.prefetchPreview("items", reference.value, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
+                    runtime.prefetchPreview(capability, reference.value, count = 1, renderVariant = "inline", filters = mapOf("source" to "inline"))
                 }
                 val entry = if (runtime.isConnected) runtime.queryCached(capability, reference.value, 10)
                     .firstOrNull { it.get("id")?.asString.equals(reference.value, true) } else null
                 if (entry != null) "<h3>${escapeHtml(entry.get("label")?.asString ?: reference.value)}</h3><code>${escapeHtml(reference.value)}</code><p>${escapeHtml(entry.get("detail")?.asString ?: MyMessageBundle.message("documentation.runtime.entry"))}</p>"
                 else {
                     runtime.prefetch(capability, reference.value, 10)
-                    val page = if (reference.kind == GuideNhReferenceKind.ITEM) GuideNhWorkspaceIndex.get(file.project).findItemPages(reference.value).firstOrNull() else GuideNhWorkspaceIndex.get(file.project).findOrePages(reference.value).firstOrNull()
+                    val page = if (reference.kind == GuideNhReferenceKind.FLUID) GuideNhWorkspaceIndex.get(file.project).findFluidPages(reference.value).firstOrNull() else if (reference.kind == GuideNhReferenceKind.ITEM) GuideNhWorkspaceIndex.get(file.project).findItemPages(reference.value).firstOrNull() else GuideNhWorkspaceIndex.get(file.project).findOrePages(reference.value).firstOrNull()
                     "<code>${escapeHtml(reference.value)}</code><p>${if (page != null) MyMessageBundle.message("documentation.defined.in", escapeHtml(page.relativePath)) else MyMessageBundle.message("documentation.runtime.unavailable")}</p>"
                 }
             }
