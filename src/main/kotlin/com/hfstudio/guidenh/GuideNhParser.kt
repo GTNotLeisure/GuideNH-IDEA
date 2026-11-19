@@ -42,6 +42,7 @@ object GuideNhParser {
             references += GuideNhReference(GuideNhReferenceKind.PAGE, value, TextRange(start, start + value.length), "parent")
         }
         references += findFrontmatterSemanticReferences(text)
+        references += guideNhFrontmatterBindings(text)
         for (match in markdownLinkPattern.findAll(markdownMaskedText)) {
             if (match.range.first > 0 && text[match.range.first - 1] == '&') continue
             val rawValue = match.groupValues[1]
@@ -73,12 +74,13 @@ object GuideNhParser {
                     // and go-to-definition resolve through the resource index. Whether a missing one is an
                     // error belongs to the annotator, which knows a bare name is a document-relative path.
                     isGuideNhResourceReference(value) || normalized in resourceAttributeNames -> GuideNhReferenceKind.RESOURCE
+                    runtimeCapability == "bindings" || runtimeCapability == "quests" -> GuideNhReferenceKind.BINDING
                     runtimeCapability == "fluids" -> GuideNhReferenceKind.FLUID
                     runtimeCapability == "items" -> GuideNhReferenceKind.ITEM
                     runtimeCapability == "ores" -> GuideNhReferenceKind.ORE
                     else -> null
                 }
-                if (kind != null) references += GuideNhReference(kind, value, attribute.valueRange, attribute.name)
+                if (kind != null) references += GuideNhReference(kind, value, attribute.valueRange, attribute.name, bindingType = if (kind == GuideNhReferenceKind.BINDING) guideNhBindingType(tag) else null)
             }
         }
         return GuideNhDocumentModel(tags, references)

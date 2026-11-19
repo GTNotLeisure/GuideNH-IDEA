@@ -24,14 +24,16 @@ data class GuideNhDocumentModel(
     val references: List<GuideNhReference>
 )
 
-enum class GuideNhReferenceKind { PAGE, RESOURCE, ITEM, FLUID, ORE }
+enum class GuideNhReferenceKind { PAGE, RESOURCE, ITEM, FLUID, ORE, BINDING }
 
 data class GuideNhReference(
     val kind: GuideNhReferenceKind,
     val value: String,
     val range: TextRange,
     val attribute: String? = null,
-    val declaration: Boolean = false
+    val declaration: Boolean = false,
+    val bindingType: String? = null,
+    val anchor: String? = null
 )
 
 data class GuideNhTagSchema(

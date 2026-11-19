@@ -30,6 +30,7 @@ data class GuideNhResource(val file: VirtualFile, val resourceId: String, val na
 class GuideNhWorkspaceIndex(private val project: Project) {
     private val pages = ConcurrentHashMap<String, GuideNhPage>()
     private val resources = ConcurrentHashMap<String, GuideNhResource>()
+    private val pagesByBinding = ConcurrentHashMap<String, MutableSet<VirtualFile>>()
     private val pagesByFluid = ConcurrentHashMap<String, MutableSet<VirtualFile>>()
     private val pagesByItem = ConcurrentHashMap<String, MutableSet<VirtualFile>>()
     private val pagesByOre = ConcurrentHashMap<String, MutableSet<VirtualFile>>()
@@ -155,6 +156,13 @@ class GuideNhWorkspaceIndex(private val project: Project) {
     }
 
     fun allPages(): List<GuideNhPage> { ensureScanned(); return pages.values.sortedBy { it.relativePath } }
+    fun queryBindingIds(type: String, prefix: String): List<String> {
+        ensureScanned()
+        return pages.values.flatMap { it.semanticValues["bindings"].orEmpty() }
+            .filter { it.substringBefore('\u0000') == type.trim().lowercase() }
+            .map { it.substringAfter('\u0000') }.distinct().filter { it.startsWith(prefix, true) }.sorted().take(200)
+    }
+    fun findBindingPages(type: String?, id: String): List<GuideNhPage> = findSemanticPages(pagesByBinding, guideNhBindingIdentity(type, id))
     fun findFluidPages(fluidId: String): List<GuideNhPage> = findSemanticPages(pagesByFluid, fluidId.substringBefore('#'))
 
     fun findItemPages(itemId: String): List<GuideNhPage> = findSemanticPages(pagesByItem, itemId)
@@ -177,17 +185,20 @@ class GuideNhWorkspaceIndex(private val project: Project) {
         // A document may be referenced before it is saved. Use its in-memory state so
         // completion, definitions and Find Usages agree with the active editor.
         val frontmatter = FileDocumentManager.getInstance().getDocument(file)?.text
-            ?: runCatching { file.inputStream.use { it.reader().readText() } }.getOrDefault("")
+            ?: runCatching { file.inputStream.use { it.reader(Charsets.UTF_8).readText() } }.getOrDefault("")
+        val bindings = guideNhFrontmatterBindings(frontmatter)
         val fluidIds = extractFrontmatterValues(frontmatter, "fluid_id", "fluid_ids").map { it.substringBefore('#') }.toSet()
         val itemIds = extractFrontmatterValues(frontmatter, "item_id", "item_ids")
         val oreIds = extractFrontmatterValues(frontmatter, "ore_ids")
         val indexedValues = mapOf(
+            "bindings" to bindings.map { guideNhBindingIdentity(it.bindingType, it.value) }.toSet(),
+            "research_id" to bindings.filter { it.bindingType == "thaumcraft" }.map { it.value }.toSet(),
+            "research_ids" to bindings.filter { it.bindingType == "thaumcraft" }.map { it.value }.toSet(),
             "fluid_id" to fluidIds,
             "fluid_ids" to fluidIds,
             "item_id" to itemIds,
             "item_ids" to itemIds,
             "ore_ids" to oreIds,
-            "quest_ids" to extractFrontmatterValues(frontmatter, "quest_ids"),
             "categories" to extractFrontmatterValues(frontmatter, "categories"),
             "navigation.required_mod" to extractFrontmatterValues(frontmatter, "required_mod"),
             "navigation.required_mods" to extractFrontmatterValues(frontmatter, "required_mods"),
@@ -199,6 +210,7 @@ class GuideNhWorkspaceIndex(private val project: Project) {
         val page = GuideNhPage(file, "$namespace:$relative", namespace, locale, relative, itemIds, oreIds, indexedValues)
         pages[file.url] = page
         pagesByRelative.computeIfAbsent(relative) { ConcurrentHashMap.newKeySet() }.add(file)
+        bindings.forEach { pagesByBinding.computeIfAbsent(guideNhBindingIdentity(it.bindingType, it.value)) { ConcurrentHashMap.newKeySet() }.add(file) }
         fluidIds.forEach { pagesByFluid.computeIfAbsent(it) { ConcurrentHashMap.newKeySet() }.add(file) }
         itemIds.forEach { pagesByItem.computeIfAbsent(it) { ConcurrentHashMap.newKeySet() }.add(file) }
         oreIds.forEach { pagesByOre.computeIfAbsent(it) { ConcurrentHashMap.newKeySet() }.add(file) }
@@ -209,6 +221,7 @@ class GuideNhWorkspaceIndex(private val project: Project) {
         val removed = pages.values.filter { it.file == file }.distinctBy { it.file }
         pages.entries.removeIf { it.value.file == file }
         removed.forEach { page ->
+            page.semanticValues["bindings"].orEmpty().forEach { id -> pagesByBinding[id]?.also { it.remove(file); if (it.isEmpty()) pagesByBinding.remove(id) } }
             pagesByRelative[page.relativePath]?.also { it.remove(file); if (it.isEmpty()) pagesByRelative.remove(page.relativePath) }
             page.semanticValues["fluid_id"].orEmpty().forEach { id -> pagesByFluid[id]?.also { it.remove(file); if (it.isEmpty()) pagesByFluid.remove(id) } }
             page.itemIds.forEach { id -> pagesByItem[id]?.also { it.remove(file); if (it.isEmpty()) pagesByItem.remove(id) } }

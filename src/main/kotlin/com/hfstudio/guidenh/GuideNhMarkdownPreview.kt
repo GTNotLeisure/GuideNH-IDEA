@@ -1,6 +1,11 @@
 package com.hfstudio.guidenh
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.project.ProjectLocator
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.LocalFileSystem
+import java.net.URI
+import java.nio.file.Paths
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import org.intellij.markdown.ast.ASTNode
 import org.intellij.markdown.MarkdownElementTypes
@@ -50,7 +55,8 @@ class GuideNhMarkdownPreviewExtensionProvider : MarkdownBrowserPreviewExtension.
     override fun createBrowserExtension(panel: MarkdownHtmlPanel): MarkdownBrowserPreviewExtension = GuideNhMarkdownPreviewExtension(panel)
 }
 
-private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPanel) : MarkdownBrowserPreviewExtension, ResourceProvider, Disposable {
+public open class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPanel) : MarkdownBrowserPreviewExtension, ResourceProvider, Disposable {
+    private val gson = Gson()
     private val imageResourcePrefix = "guidenh-image/"
     private val documentContextUrl = "guidenh-preview-context.js"
     private val scriptUrl = "guidenh-markdown-preview.js"
@@ -72,6 +78,7 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
         val documentUrl = panel.virtualFile?.url.orEmpty()
         val source = documentSource()
         val imageReferences = documentImageReferences(source).joinToString(",") { "\"${escapeJavaScript(it)}\"" }
+        val (bindingTargets, bindingPreviews) = documentBindingContext(source)
         // Browser-extension resources are served by IDEA's panel-level aggregating provider.
         // Resolve from the preview page itself so its already registered provider hash is kept.
         return """
@@ -80,8 +87,42 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
               window.__GUIDENH_IMAGE_URL__=new URL("$imageResourcePrefix", document.baseURI).toString();
               window.__GUIDENH_IMAGE_REFERENCES__=[$imageReferences];
               window.__GUIDENH_ACTION_LINKS__=${documentActionLinks(source)};
+              window.__GUIDENH_BINDING_TARGETS__=$bindingTargets;
+              window.__GUIDENH_BINDING_PREVIEWS__=$bindingPreviews;
             })();
         """.trimIndent()
+    }
+
+    private fun documentBindingContext(source: String): Pair<String, String> {
+        val file = panel.virtualFile ?: return "{}" to "{}"
+        val project = ProjectLocator.getInstance().guessProjectForFile(file) ?: return "{}" to "{}"
+        val runtime = GuideNhRuntimeBridgeService.get()
+        val index = GuideNhWorkspaceIndex.get(project)
+        val locale = Regex("/guidenh/(?:guidenh/)?_([^/]+)/").find(file.path)?.groupValues?.get(1)?.lowercase()
+        val targets = linkedMapOf<String, Any>()
+        val previews = linkedMapOf<String, Any>()
+        val pageBindings = mutableMapOf<VirtualFile, List<GuideNhReference>>()
+        val bindings = GuideNhParser.parse(source).references.filter { it.kind == GuideNhReferenceKind.BINDING }
+            .distinctBy { guideNhBindingIdentity(it.bindingType, it.value) }
+        for (binding in bindings) {
+            val identity = guideNhBindingIdentity(binding.bindingType, binding.value)
+            val type = identity.substringBefore('\u0000')
+            val id = identity.substringAfter('\u0000')
+            val key = gson.toJson(listOf(type, id))
+            val filters = mapOf("type" to type)
+            runtime.prefetchPreview("bindings", id, filters = filters)
+            runtime.previewCached("bindings", id, filters = filters)?.let { previews[key] = it }
+            targets[key] = index.findBindingPages(type, id).filter { locale == null || it.locale == null || it.locale == locale }.flatMap { page ->
+                val entries = pageBindings.getOrPut(page.file) {
+                    val text = FileDocumentManager.getInstance().getCachedDocument(page.file)?.text
+                        ?: runCatching { page.file.inputStream.use { it.reader(Charsets.UTF_8).readText() } }.getOrDefault("")
+                    guideNhFrontmatterBindings(text)
+                }
+                entries.filter { guideNhBindingIdentity(it.bindingType, it.value) == identity }
+                    .map { mapOf("path" to page.file.url, "anchor" to it.anchor.orEmpty().removePrefix("#"), "title" to page.file.name) }
+            }.distinct()
+        }
+        return gson.toJson(targets) to gson.toJson(previews)
     }
 
     private fun documentSource(): String {
@@ -149,7 +190,7 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
     }
 
     /** Matches GuideNH's IdUtils.resolveLink followed by MutableGuide.loadAsset fallback. */
-    private fun resolveGuideNhImage(reference: String): com.intellij.openapi.vfs.VirtualFile? {
+    private fun resolveGuideNhImage(reference: String): VirtualFile? {
         val document = panel.virtualFile ?: return null
         val path = document.path.replace('\\', '/')
         val location = Regex("^(.*?/assets/)([^/]+)(/guidenh/)(?:guidenh/)?_([a-z]{2}_[a-z]{2})/(.+\\.md)$", RegexOption.IGNORE_CASE)
@@ -179,7 +220,7 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
         val guideRoot = "$assetsRoot$namespace$guideFolder"
         return listOf("${guideRoot}_$locale/$logicalPath", "$guideRoot$logicalPath")
             .asSequence()
-            .mapNotNull { candidate -> com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(candidate) }
+            .mapNotNull { candidate -> LocalFileSystem.getInstance().findFileByPath(candidate) }
             .firstOrNull()
     }
 
@@ -198,7 +239,7 @@ private class GuideNhMarkdownPreviewExtension(private val panel: MarkdownHtmlPan
     /** Recovers the logical resource path if IntelliJ resolved Markdown relative to _<locale>. */
     private fun guideLogicalPathFromFileUri(reference: String): String? {
         if (!reference.startsWith("file:", ignoreCase = true)) return null
-        val physicalPath = runCatching { java.nio.file.Paths.get(java.net.URI(reference)).toString().replace('\\', '/') }.getOrNull()
+        val physicalPath = runCatching { Paths.get(URI(reference)).toString().replace('\\', '/') }.getOrNull()
             ?: return null
         val marker = physicalPath.indexOf("/guidenh/", ignoreCase = true)
         if (marker < 0) return null

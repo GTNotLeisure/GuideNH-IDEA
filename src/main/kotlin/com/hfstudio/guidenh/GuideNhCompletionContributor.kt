@@ -18,6 +18,32 @@ class GuideNhCompletionContributor : CompletionContributor() {
                 val text = file.text
                 val offset = parameters.offset.coerceAtMost(text.length)
                 val before = text.substring(0, offset)
+                val binding = guideNhBindingValueContext(text, offset)
+                if (binding?.name == "id" && binding.type != null) {
+                    val runtime = GuideNhRuntimeBridgeService.get()
+                    val filters = mapOf("type" to binding.type)
+                    val candidates = GuideNhWorkspaceIndex.get(file.project).queryBindingIds(binding.type, binding.prefix)
+                    val cached = runtime.queryCached("bindings", binding.prefix, 80, filters)
+                    val matcher = result.withPrefixMatcher(binding.prefix)
+                    (candidates + cached.mapNotNull { it.get("id")?.asString }).distinct().forEach { id ->
+                        matcher.addElement(LookupElementBuilder.create(id).withTypeText(binding.type).withInsertHandler { insertion, _ ->
+                            val replacement = when (binding.quote) {
+                                '"' -> id.replace("\\", "\\\\").replace("\"", "\\\"")
+                                '\'' -> id.replace("'", "''")
+                                else -> id
+                            }
+                            val shift = insertion.tailOffset - offset
+                            insertion.document.replaceString(binding.range.startOffset, binding.range.endOffset + shift, replacement)
+                            insertion.tailOffset = binding.range.startOffset + replacement.length
+                            insertion.editor.caretModel.moveToOffset(insertion.tailOffset)
+                        })
+                    }
+                    if (runtime.isConnected && cached.isEmpty()) {
+                        runtime.prefetch("bindings", binding.prefix, 80, filters)
+                        result.restartCompletionOnPrefixChange(binding.prefix)
+                    }
+                    return
+                }
                 val tagPrefix = Regex("<([A-Za-z][A-Za-z0-9]*)?$").find(before)?.groupValues?.getOrNull(1)
                 val schema = GuideNhSchemaService.get(file.project)
                 if (before.substringAfterLast('<').contains('>')) return
@@ -42,18 +68,23 @@ class GuideNhCompletionContributor : CompletionContributor() {
                             result.addElement(LookupElementBuilder.create(page.relativePath).withTypeText(MyMessageBundle.message("completion.page")))
                         }
                     }
-                    GuideNhWorkspaceIndex.get(file.project).querySemanticValues(path, prefix).forEach { value ->
+                    val bindingType = if (path.startsWith("research_id")) "thaumcraft" else guideNhBindingTypeAtOffset(text, offset)
+                    val offlineValues = if (capability == "bindings" && bindingType != null)
+                        GuideNhWorkspaceIndex.get(file.project).queryBindingIds(bindingType, prefix)
+                        else GuideNhWorkspaceIndex.get(file.project).querySemanticValues(path, prefix)
+                    offlineValues.forEach { value ->
                         result.addElement(LookupElementBuilder.create(value).withTypeText(MyMessageBundle.message("completion.frontmatter")))
                     }
                     if (capability != null && GuideNhRuntimeBridgeService.get().isConnected) {
                         val runtime = GuideNhRuntimeBridgeService.get()
-                        val cached = runtime.queryCached(capability, prefix, 80)
+                        val filters = if (capability == "bindings") mapOf("type" to if (path.startsWith("research_id")) "thaumcraft" else guideNhBindingTypeAtOffset(text, offset).orEmpty()) else emptyMap()
+                        val cached = runtime.queryCached(capability, prefix, 80, filters)
                         cached.forEach { entry ->
                             val id = entry.get("id")?.asString ?: return@forEach
                             result.addElement(LookupElementBuilder.create(id).withTypeText(entry.get("label")?.asString ?: capability))
                         }
                         if (cached.isEmpty()) {
-                            runtime.prefetch(capability, prefix, 80)
+                            runtime.prefetch(capability, prefix, 80, filters)
                             result.restartCompletionOnPrefixChange(prefix)
                         }
                     }
@@ -87,6 +118,13 @@ class GuideNhCompletionContributor : CompletionContributor() {
                     }
                     if (values.isNotEmpty()) return
                     val runtimeCapability = resolveGuideNhRuntimeCapability(tagName, attributeName, attributeSchema)
+                    if (runtimeCapability == "bindings" || runtimeCapability == "quests") {
+                        val type = if (tagName.startsWith("Research")) "thaumcraft" else if (tagName.startsWith("Quest")) "betterquesting"
+                            else guideNhRuntimeFilters(text, offset, tagName, attributeName)["type"]
+                        if (type != null) index.queryBindingIds(type, prefix).forEach { id ->
+                            result.addElement(valueLookup(id, type, valueContext))
+                        }
+                    }
                     if (runtimeCapability != null && GuideNhRuntimeBridgeService.get().isConnected) {
                         val runtime = GuideNhRuntimeBridgeService.get()
                         val filters = guideNhRuntimeFilters(text, offset, tagName, attributeName)
@@ -257,7 +295,7 @@ class GuideNhCompletionContributor : CompletionContributor() {
     private fun findFrontmatterValueContext(before: String): Pair<String, String>? {
         if (before.lineSequence().firstOrNull()?.trim() != "---") return null
         val line = before.substringAfterLast('\n')
-        val keyMatch = Regex("""^(\s*)([A-Za-z_][\w.-]*)\s*:\s*([^\n]*)$""").find(line)
+        val keyMatch = Regex("""^(\s*)(?:-\s*)?([A-Za-z_][\w.-]*)\s*:\s*([^\n]*)$""").find(line)
         val listMatch = Regex("""^(\s*)-\s*(.*?)\s*$""").find(line)
         if (keyMatch == null && listMatch == null) return null
         val indent = (keyMatch ?: listMatch!!).groupValues[1].length

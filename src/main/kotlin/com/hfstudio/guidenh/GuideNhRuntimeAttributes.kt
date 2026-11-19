@@ -1,6 +1,8 @@
 package com.hfstudio.guidenh
 
 private val runtimeAttributeCapabilities = mapOf(
+    "ResearchLink.id" to "bindings", "ResearchCard.id" to "bindings", "ResearchIcon.id" to "bindings",
+    "BindingLink.id" to "bindings", "BindingCard.id" to "bindings", "BindingIcon.id" to "bindings",
     "FluidImage.id" to "fluids", "FluidLink.id" to "fluids", "FluidIcon.id" to "fluids",
     "InputAnnotation.fluid" to "fluids", "ContentTabs.iconFluid" to "fluids", "ContentTabs.icon_fluid" to "fluids",
     "Series.iconFluid" to "fluids", "LineSeries.iconFluid" to "fluids", "Slice.iconFluid" to "fluids",
@@ -20,7 +22,7 @@ private val runtimeAttributeCapabilities = mapOf(
     "Entity.id" to "entities", "ImportStructureLib.controller" to "structurelib", "SubPages.id" to "pages"
 )
 
-private val typeCapabilities = mapOf("fluid" to "fluids", "item" to "items", "ore" to "ores", "page" to "pages")
+private val typeCapabilities = mapOf("binding" to "bindings", "fluid" to "fluids", "item" to "items", "ore" to "ores", "page" to "pages")
 
 fun resolveGuideNhRuntimeCapability(tagName: String?, attributeName: String, schema: GuideNhAttributeSchema? = null): String? =
     when {
@@ -37,6 +39,13 @@ fun guideNhStaticRuntimeValues(tagName: String?, attributeName: String): List<St
 }
 
 fun guideNhRuntimeFilters(text: String, offset: Int, tagName: String?, attributeName: String): Map<String, String> {
+    if (tagName?.startsWith("Research") == true) return mapOf("type" to "thaumcraft")
+    if (tagName?.startsWith("Binding") == true) {
+        val tag = GuideNhParser.parse(text).tags.firstOrNull { offset in it.range }
+        val type = tag?.let(::guideNhBindingType) ?: Regex("""type\s*=\s*["']([^"']*)["']""")
+            .find(text.substring(0, offset).substringAfterLast('<'))?.groupValues?.get(1)
+        return type?.let { mapOf("type" to it) } ?: emptyMap()
+    }
     if (!tagName.equals("ImportStructureLib", true)) return emptyMap()
     val openTag = text.substring(0, offset).substringAfterLast('<')
     if (!openTag.startsWith("ImportStructureLib", true)) return emptyMap()
@@ -54,9 +63,10 @@ fun guideNhRuntimeFilters(text: String, offset: Int, tagName: String?, attribute
 }
 
 fun resolveGuideNhFrontmatterRuntimeCapability(path: String): String? = mapOf(
+    "research_id" to "bindings", "research_ids" to "bindings", "bindings.id" to "bindings",
     "fluid_id" to "fluids", "fluid_ids" to "fluids",
     "navigation.icon_fluid" to "fluids", "navigation.icon_fluids" to "fluids",
-    "item_id" to "items", "item_ids" to "items", "ore_ids" to "ores", "quest_ids" to "quests",
+    "item_id" to "items", "item_ids" to "items", "ore_ids" to "ores",
     "categories" to "categories", "navigation.parent" to "pages", "navigation.required_mod" to "mods",
     "navigation.required_mods" to "mods", "navigation.excluded_mod" to "mods", "navigation.excluded_mods" to "mods",
     "navigation.icon" to "items", "navigation.icons" to "items"

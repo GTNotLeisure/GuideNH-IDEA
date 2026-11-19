@@ -38,6 +38,13 @@ class GuideNhDocumentationProvider : AbstractDocumentationProvider() {
         }
         val reference = model.references.firstOrNull { offset in it.range.startOffset..it.range.endOffset } ?: return null
         return when (reference.kind) {
+            GuideNhReferenceKind.BINDING -> {
+                val runtime = GuideNhRuntimeBridgeService.get()
+                val filters = mapOf("type" to reference.bindingType.orEmpty())
+                val entry = runtime.queryCached("bindings", reference.value, 20, filters).firstOrNull { it.get("id")?.asString == reference.value }
+                runtime.prefetch("bindings", reference.value, 20, filters)
+                "<code>${escapeHtml(reference.value)}</code><p>${escapeHtml(entry?.get("label")?.asString ?: MyMessageBundle.message("documentation.runtime.unavailable"))}</p>"
+            }
             GuideNhReferenceKind.PAGE -> GuideNhWorkspaceIndex.get(file.project).findPage(reference.value, file.virtualFile)?.let { "<h3>${escapeHtml(it.relativePath)}</h3><p>${MyMessageBundle.message("documentation.page")}</p>" }
             GuideNhReferenceKind.RESOURCE -> GuideNhWorkspaceIndex.get(file.project).findResource(reference.value, file.virtualFile)?.let { "<h3>${escapeHtml(it.relativePath)}</h3><p>${MyMessageBundle.message("documentation.resource")}</p><code>${escapeHtml(it.file.url)}</code>" }
             GuideNhReferenceKind.ITEM, GuideNhReferenceKind.FLUID, GuideNhReferenceKind.ORE -> {

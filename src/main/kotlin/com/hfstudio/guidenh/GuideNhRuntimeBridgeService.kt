@@ -19,7 +19,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 
 data class GuideNhRuntimeStatus(val state: String, val message: String? = null)
-data class GuideNhRuntimeEntry(val id: String, val label: String? = null, val detail: String? = null)
+data class GuideNhRuntimeEntry(val id: String, val label: String? = null, val detail: String? = null, val bindingType: String? = null)
 data class GuideNhRuntimeCache(val version: Long, val entries: List<GuideNhRuntimeEntry>, val stale: Boolean = false, val nextCursor: String? = null)
 data class GuideNhRuntimeDiagnostic(val message: String, val severity: String = "error", val start: Int = 0, val end: Int = start)
 
@@ -307,12 +307,12 @@ class GuideNhRuntimeBridgeService {
         val entries = page.entries.mapNotNull { value ->
             val obj = value.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
             val id = obj.get("id")?.asString ?: return@mapNotNull null
-            GuideNhRuntimeEntry(id, obj.get("label")?.asString, obj.get("detail")?.asString)
+            GuideNhRuntimeEntry(id, obj.get("label")?.asString, obj.get("detail")?.asString, obj.get("type")?.asString)
         }
         val previous = semanticCache[key]
         val source = if (append && previous != null) previous.entries + entries else entries
         val merged = source.asSequence()
-            .distinctBy { it.id.lowercase() }
+            .distinctBy { if (capability == "bindings") guideNhBindingIdentity(it.bindingType, it.id) else it.id.lowercase() }
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.id })
             .take(GuideNhProtocolSchema.maxTotalEntries)
             .toList()

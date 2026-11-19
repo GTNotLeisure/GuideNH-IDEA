@@ -19,8 +19,31 @@ object GuideNhSchemaEnhancer {
         references(tags)
         contributors(tags, sources)
         fluids(tags)
+        bindings(tags)
         markdownExtensions(root, sources)
         insertTemplates(root, sources)
+    }
+
+    private fun bindings(tags: JsonObject) {
+        listOf("Binding", "Research").forEach { prefix ->
+            listOf("Link", "Card", "Icon").forEach { suffix ->
+                val name = prefix + suffix
+                val attributes = mutableMapOf("id" to attr("binding").apply { addProperty("required", true) },
+                    "showTooltip" to boolean(), "show_tooltip" to boolean())
+                if (prefix == "Binding") attributes["type"] = string().apply { addProperty("required", true) }
+                if (suffix != "Icon") attributes["target"] = enum(listOf("auto", "native", "guide"))
+                if (suffix == "Link") attributes["text"] = string()
+                if (suffix == "Card") {
+                    attributes["title"] = string()
+                    listOf("show_desc", "show_icon", "show_parents").forEach { attributes[it] = boolean() }
+                }
+                if (suffix == "Icon") attributes["scale"] = number("expression")
+                val destination = tag(tags, name)
+                destination.add("attributes", JsonObject().apply { attributes.forEach { (key, value) -> add(key, value) } })
+                destination.addProperty("kind", if (suffix == "Link") "inline" else if (suffix == "Icon") "any" else "block")
+            }
+        }
+        mergeAttrs(tags, "QuestCard", mapOf("title" to string(), "show_desc" to boolean()))
     }
 
     private fun fluids(tags: JsonObject) {
@@ -420,6 +443,7 @@ object GuideNhSchemaEnhancer {
         "BOOLEAN" -> boolean()
         "COLOR" -> color()
         "ENUM" -> if (values.isEmpty()) string() else enum(values)
+        "BINDING_ID" -> attr("binding")
         "FLUID_ID" -> attr("fluid")
         "ITEM_ID", "BLOCK_ID" -> item()
         "ORE_DICT" -> ore()

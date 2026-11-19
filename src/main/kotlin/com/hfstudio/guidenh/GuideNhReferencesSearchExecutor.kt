@@ -2,6 +2,7 @@ package com.hfstudio.guidenh
 
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiReference
+import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.util.Processor
 import com.intellij.util.QueryExecutor
@@ -23,8 +24,9 @@ class GuideNhReferencesSearchExecutor : QueryExecutor<PsiReference, ReferencesSe
         for (page in index.allPages()) {
             val source = psiManager.findFile(page.file) ?: continue
             for (reference in GuideNhPsiReferences.create(source, source, includeDeclarations = false)) {
-                val resolved = reference.resolve()
-                if (resolved?.containingFile?.virtualFile == target.virtualFile) {
+                val resolved = if (reference is PsiPolyVariantReference) reference.multiResolve(false).mapNotNull { it.element }
+                    else listOfNotNull(reference.resolve())
+                if (resolved.any { it.containingFile?.virtualFile == target.virtualFile }) {
                     if (!consumer.process(reference)) return false
                 }
             }
@@ -42,7 +44,9 @@ class GuideNhReferencesSearchExecutor : QueryExecutor<PsiReference, ReferencesSe
         for (page in GuideNhWorkspaceIndex.get(project).allPages()) {
             val source = psiManager.findFile(page.file) ?: continue
             for (reference in GuideNhPsiReferences.create(source, source, includeDeclarations = false)) {
-                if (reference.resolve() === target && !consumer.process(reference)) return false
+                val resolved = if (reference is PsiPolyVariantReference) reference.multiResolve(false).mapNotNull { it.element }
+                    else listOfNotNull(reference.resolve())
+                if (resolved.any { it === target } && !consumer.process(reference)) return false
             }
         }
         return true
