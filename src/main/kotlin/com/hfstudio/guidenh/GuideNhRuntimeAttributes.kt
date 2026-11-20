@@ -8,7 +8,7 @@ private val runtimeAttributeCapabilities = mapOf(
     "Series.iconFluid" to "fluids", "LineSeries.iconFluid" to "fluids", "Slice.iconFluid" to "fluids",
     "Recipe.fluid" to "fluids", "Usage.fluid" to "fluids", "RecipeFor.fluid" to "fluids",
     "RecipeUsage.fluid" to "fluids", "RecipesFor.fluid" to "fluids", "RecipesUsage.fluid" to "fluids",
-    "NeiRecipeLink.id" to "items",
+    "NeiRecipeLink.id" to "items", "NeiRecipeLink.handlerId" to "neiHandlers",
     "ItemLink.id" to "items", "ItemLink.ore" to "ores",
     "ItemImage.id" to "items", "ItemImage.ore" to "ores",
     "BlockImage.id" to "items", "BlockImage.ore" to "ores",
@@ -22,7 +22,7 @@ private val runtimeAttributeCapabilities = mapOf(
     "Entity.id" to "entities", "ImportStructureLib.controller" to "structurelib", "SubPages.id" to "pages"
 )
 
-private val typeCapabilities = mapOf("binding" to "bindings", "fluid" to "fluids", "item" to "items", "ore" to "ores", "page" to "pages")
+private val typeCapabilities = mapOf("binding" to "bindings", "recipehandler" to "neiHandlers", "fluid" to "fluids", "item" to "items", "ore" to "ores", "page" to "pages")
 
 fun resolveGuideNhRuntimeCapability(tagName: String?, attributeName: String, schema: GuideNhAttributeSchema? = null): String? =
     when {

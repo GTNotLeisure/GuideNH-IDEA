@@ -59,7 +59,9 @@ class GuideNhSchemaService(private val project: Project) {
                     attributes = attributes,
                     children = objectValue.getAsJsonArray("children")?.map { it.asString } ?: emptyList(),
                     preferredChildren = objectValue.getAsJsonArray("preferredChildren")?.map { it.asString } ?: emptyList(),
-                    forwardsAttributes = objectValue.get("forwardsAttributes")?.asBoolean ?: false
+                    forwardsAttributes = objectValue.get("forwardsAttributes")?.asBoolean ?: false,
+                    container = objectValue.get("container")?.asBoolean ?: false,
+                    kind = objectValue.get("kind")?.asString ?: "any"
                 )
             }
             loadGeneratedTags().forEach { (key, generated) ->
@@ -71,7 +73,9 @@ class GuideNhSchemaService(private val project: Project) {
                     children = if (generated.preferredChildren.isNotEmpty()) existing.children else (existing.children + generated.children).distinct().sorted(),
                     preferredChildren = if (generated.preferredChildren.isNotEmpty()) generated.preferredChildren else existing.preferredChildren,
                     forwardsAttributes = existing.forwardsAttributes || generated.forwardsAttributes,
-                    removedAttributes = existing.removedAttributes + generated.removedAttributes
+                    removedAttributes = existing.removedAttributes + generated.removedAttributes,
+                    container = existing.container || generated.container,
+                    kind = if (generated.kind == "any") existing.kind else generated.kind
                 )
             }
             return result
@@ -105,7 +109,9 @@ class GuideNhSchemaService(private val project: Project) {
                     children = tag.getAsJsonArray("children")?.map { it.asString } ?: emptyList(),
                     preferredChildren = tag.getAsJsonArray("preferredChildren")?.map { it.asString } ?: emptyList(),
                     forwardsAttributes = tag.get("forwardsAttributes")?.asBoolean ?: false,
-                    removedAttributes = removed
+                    removedAttributes = removed,
+                    container = tag.get("container")?.asBoolean ?: false,
+                    kind = tag.get("kind")?.asString ?: "any"
                 )
             }.orEmpty()
         }.getOrDefault(emptyMap())

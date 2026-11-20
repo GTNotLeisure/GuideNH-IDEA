@@ -188,7 +188,7 @@ object GuideNhParser {
         }
     }
 
-    private fun maskMarkdown(text: String): String {
+    fun maskMarkdown(text: String): String {
         val chars = text.toCharArray()
         val ranges = mutableListOf<IntRange>()
         Regex("\\{/\\*[\\s\\S]*?\\*/\\}").findAll(text).forEach { ranges += it.range }

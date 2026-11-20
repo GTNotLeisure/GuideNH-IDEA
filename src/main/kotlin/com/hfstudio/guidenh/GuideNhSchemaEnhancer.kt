@@ -29,7 +29,7 @@ object GuideNhSchemaEnhancer {
             listOf("Link", "Card", "Icon").forEach { suffix ->
                 val name = prefix + suffix
                 val attributes = mutableMapOf("id" to attr("binding").apply { addProperty("required", true) },
-                    "showTooltip" to boolean(), "show_tooltip" to boolean())
+                    "showTooltip" to boolean())
                 if (prefix == "Binding") attributes["type"] = string().apply { addProperty("required", true) }
                 if (suffix != "Icon") attributes["target"] = enum(listOf("auto", "native", "guide"))
                 if (suffix == "Link") attributes["text"] = string()
@@ -195,7 +195,7 @@ object GuideNhSchemaEnhancer {
         mergeAttrs(tags, "FloatingImage", mapOf("alt" to string(), "displayHeight" to number(), "displayWidth" to number(), "h" to number(), "height" to number(), "scaleX" to number(), "scaleY" to number(), "sound" to string(), "soundSrc" to resource(), "src" to resource(), "trigger" to string(), "volume" to number("expression"), "w" to number(), "wrap" to string(), "width" to number(), "x" to number(), "y" to number()))
         mergeAttrs(tags, "SoundLink", sound())
         define(tags, "NeiRecipeLink", "GuideNH NEI inline navigation; browser previews are inactive", mapOf(
-            "id" to item(), "handlerId" to string("Exact overlay or handler ID, case-insensitive. Required in handler mode."),
+            "id" to item(), "handlerId" to attr("recipeHandler"),
             "mode" to enum(listOf("handler", "recipes", "usage")), "title" to string()))
         tag(tags, "NeiRecipeLink").addProperty("kind", "inline")
         define(tags, "ImageAnnotation", "GuideNH floating image annotation", mapOf("border" to boolean("bare"), "borderColor" to color(), "borderThickness" to number(), "h" to number(), "sound" to string(), "src" to resource(), "trigger" to string(), "volume" to number("expression"), "w" to number(), "x" to number(), "y" to number()))
@@ -252,6 +252,9 @@ object GuideNhSchemaEnhancer {
             }
             Regex("sink\\s*\\.\\s*(?:tags|containerTags)\\(([\\s\\S]*?)\\)\\s*;").findAll(source.text).forEach { call ->
                 quoted(call.groupValues[1]).forEach { name -> tag(tags, name) }
+            }
+            Regex("sink\\s*\\.\\s*containerTags\\(([\\s\\S]*?)\\)\\s*;").findAll(source.text).forEach { call ->
+                quoted(call.groupValues[1]).forEach { name -> tag(tags, name).addProperty("container", true) }
             }
             Regex("sink\\s*\\.\\s*attributes\\(\\s*\"([^\"]+)\"\\s*,([\\s\\S]*?)\\)\\s*;").findAll(source.text).forEach { call ->
                 val attrs = LinkedHashMap<String, JsonObject>()
@@ -444,6 +447,7 @@ object GuideNhSchemaEnhancer {
         "COLOR" -> color()
         "ENUM" -> if (values.isEmpty()) string() else enum(values)
         "BINDING_ID" -> attr("binding")
+        "RECIPE_HANDLER_ID" -> attr("recipeHandler")
         "FLUID_ID" -> attr("fluid")
         "ITEM_ID", "BLOCK_ID" -> item()
         "ORE_DICT" -> ore()

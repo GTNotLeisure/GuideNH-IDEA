@@ -45,7 +45,9 @@ data class GuideNhTagSchema(
     val preferredChildren: List<String> = emptyList(),
     /** Set when the tag accepts any attribute, so one it does not declare is legal rather than a mistake. */
     val forwardsAttributes: Boolean = false,
-    val removedAttributes: Set<String> = emptySet()
+    val removedAttributes: Set<String> = emptySet(),
+    val container: Boolean = false,
+    val kind: String = "any"
 )
 
 data class GuideNhAttributeSchema(

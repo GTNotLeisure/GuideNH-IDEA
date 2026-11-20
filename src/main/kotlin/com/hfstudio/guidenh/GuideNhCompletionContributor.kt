@@ -7,6 +7,7 @@ import com.intellij.codeInsight.template.TemplateManager
 import com.intellij.codeInsight.template.impl.TextExpression
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
+import com.intellij.openapi.project.Project
 import com.hfstudio.MyMessageBundle
 
 class GuideNhCompletionContributor : CompletionContributor() {
@@ -18,6 +19,41 @@ class GuideNhCompletionContributor : CompletionContributor() {
                 val text = file.text
                 val offset = parameters.offset.coerceAtMost(text.length)
                 val before = text.substring(0, offset)
+                val masked = GuideNhParser.maskMarkdown(text)
+                val action = guideNhNeiCompletionContext(masked, offset)
+                if (action != null) {
+                    val runtime = GuideNhRuntimeBridgeService.get()
+                    val cached = action.capability?.let { runtime.queryCached(it, action.prefix, 80) }.orEmpty()
+                    val indexed = if (action.capability == "items") listOf("item_id", "item_ids", "navigation.icon", "navigation.icons")
+                        .flatMap { GuideNhWorkspaceIndex.get(file.project).querySemanticValues(it, action.prefix) } else emptyList()
+                    val values = action.choices.filter { it.startsWith(action.prefix, true) } + indexed + cached.mapNotNull { it.get("id")?.asString }
+                    val matcher = result.withPrefixMatcher(action.prefix)
+                    values.distinct().forEach { value ->
+                        matcher.addElement(LookupElementBuilder.create(value).withTypeText(action.capability ?: "NEI").withInsertHandler { insertion, _ ->
+                            val replacement = if (action.capability == null) value else encodeGuideNhNeiCompletionValue(value)
+                            val shift = insertion.tailOffset - offset
+                            insertion.document.replaceString(action.start, action.end + shift, replacement)
+                            insertion.tailOffset = action.start + replacement.length
+                            insertion.editor.caretModel.moveToOffset(insertion.tailOffset)
+                        })
+                    }
+                    if (action.capability != null && runtime.isConnected && cached.isEmpty()) {
+                        runtime.prefetch(action.capability, action.prefix, 80)
+                        result.restartCompletionOnPrefixChange(action.prefix)
+                    }
+                    return
+                }
+                if (masked.substring(0, offset).endsWith("&[")) {
+                    GuideNhSchemaService.get(file.project).snippets().filter { it.prefix == "&[" }.forEach { snippet ->
+                        result.withPrefixMatcher("&[").addElement(LookupElementBuilder.create(snippet.prefix).withPresentableText(snippet.description ?: "NEI").withInsertHandler { insertion, _ ->
+                            insertion.document.deleteString(offset - 2, insertion.tailOffset)
+                            insertion.editor.caretModel.moveToOffset(offset - 2)
+                            TemplateManager.getInstance(file.project).startTemplate(insertion.editor, createSnippetTemplate(file.project, snippet.body.joinToString("\n")))
+                        })
+                    }
+                    return
+                }
+                if (offset > 0 && masked[offset - 1] != text[offset - 1]) return
                 val binding = guideNhBindingValueContext(text, offset)
                 if (binding?.name == "id" && binding.type != null) {
                     val runtime = GuideNhRuntimeBridgeService.get()
@@ -46,7 +82,6 @@ class GuideNhCompletionContributor : CompletionContributor() {
                 }
                 val tagPrefix = Regex("<([A-Za-z][A-Za-z0-9]*)?$").find(before)?.groupValues?.getOrNull(1)
                 val schema = GuideNhSchemaService.get(file.project)
-                if (before.substringAfterLast('<').contains('>')) return
                 val frontmatterLine = before.substringAfterLast('\n')
                 if (before.lineSequence().firstOrNull()?.trim() == "---" && !frontmatterLine.trimStart().startsWith("-") && !frontmatterLine.contains(':')) {
                     val keyPrefix = frontmatterLine.trim()
@@ -178,7 +213,7 @@ class GuideNhCompletionContributor : CompletionContributor() {
                     schema.allTags().filter { it.name.startsWith(tagPrefix, true) }.forEach {
                         result.addElement(LookupElementBuilder.create(it.name).withTypeText(MyMessageBundle.message("completion.tag")).withTailText("  ${it.description ?: ""}").withInsertHandler { insertionContext, _ ->
                             val tag = it.name
-                            val suffix = if (it.attributes.isEmpty() && it.children.isEmpty()) " />" else ">\n</$tag>"
+                            val suffix = if (!it.container && it.children.isEmpty()) " />" else if (it.kind == "inline") "></$tag>" else ">\n</$tag>"
                             insertionContext.document.insertString(insertionContext.tailOffset, suffix)
                             insertionContext.editor.caretModel.moveToOffset(insertionContext.tailOffset - suffix.length + if (suffix.startsWith(" />")) 0 else 1)
                         })
@@ -295,7 +330,7 @@ class GuideNhCompletionContributor : CompletionContributor() {
     private fun findFrontmatterValueContext(before: String): Pair<String, String>? {
         if (before.lineSequence().firstOrNull()?.trim() != "---") return null
         val line = before.substringAfterLast('\n')
-        val keyMatch = Regex("""^(\s*)(?:-\s*)?([A-Za-z_][\w.-]*)\s*:\s*([^\n]*)$""").find(line)
+        val keyMatch = Regex("""^(\s*)(?:-\s*)?([A-Za-z_][\w.-]*)\s*:(?:\s+|$)([^\n]*)$""").find(line)
         val listMatch = Regex("""^(\s*)-\s*(.*?)\s*$""").find(line)
         if (keyMatch == null && listMatch == null) return null
         val indent = (keyMatch ?: listMatch!!).groupValues[1].length
@@ -328,7 +363,7 @@ class GuideNhCompletionContributor : CompletionContributor() {
         return if (attribute.valueStyle.equals("expression", true)) "={$defaultValue}" else "=\"$defaultValue\""
     }
 
-    private fun createSnippetTemplate(project: com.intellij.openapi.project.Project, value: String): Template {
+    private fun createSnippetTemplate(project: Project, value: String): Template {
         val template = TemplateManager.getInstance(project).createTemplate("guidenh", "GuideNH", "")
         var cursor = 0
         val declared = HashSet<Int>()

@@ -14,6 +14,7 @@ data class GuideNhItemStackContext(
 
 object GuideNhItemStackContexts {
     private val attributeTargets = mapOf(
+        "neirecipelink" to setOf("id"),
         "fluidimage" to setOf("id"), "fluidlink" to setOf("id"), "fluidicon" to setOf("id"),
         "inputannotation" to setOf("item", "fluid"),
         "recipe" to setOf("id", "fluid"), "usage" to setOf("id", "fluid"), "recipefor" to setOf("id", "fluid"),

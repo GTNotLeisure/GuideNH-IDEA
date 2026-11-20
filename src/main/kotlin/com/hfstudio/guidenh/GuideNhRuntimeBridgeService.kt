@@ -487,7 +487,7 @@ class GuideNhRuntimeBridgeService {
         private const val MAX_ICON_BASE64_LENGTH = 2_000_000
         private const val MAX_CACHED_PREVIEWS = 256
         private const val MAX_WARMUP_ENTRIES = 2_000
-        private val PREFERRED_WARMUP_CAPABILITIES = setOf("commands", "sounds", "keybinds", "recipes", "quests", "entities", "structurelib", "pages")
+        private val PREFERRED_WARMUP_CAPABILITIES = setOf("commands", "sounds", "keybinds", "recipes", "neiHandlers", "quests", "entities", "structurelib", "pages")
         private val DYNAMIC_CAPABILITIES = setOf("items", "ores", "categories", "mods")
         private val previewExecutor = Executors.newFixedThreadPool(2) { runnable -> Thread(runnable, "guidenh-runtime-preview-prefetch").apply { isDaemon = true } }
         fun get(): GuideNhRuntimeBridgeService = com.intellij.openapi.application.ApplicationManager.getApplication().getService(GuideNhRuntimeBridgeService::class.java)

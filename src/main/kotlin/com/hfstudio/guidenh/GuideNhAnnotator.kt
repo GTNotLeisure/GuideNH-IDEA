@@ -145,13 +145,12 @@ class GuideNhAnnotator : Annotator {
         val mode = attrs["mode"]?.trim()?.lowercase() ?: if (id.isBlank()) "handler" else "recipes"
         val closing = source.indexOf("</NeiRecipeLink>", tag.range.endOffset)
         val body = if (closing >= 0) source.substring(tag.range.endOffset, closing) else ""
-        val visualContent = Regex("<(?:ItemIcon|ItemImage|ItemId|BlockId|KeyBind|PlayerName|Amount|img)\\b", RegexOption.IGNORE_CASE).containsMatchIn(body)
         val message = when {
             mode !in setOf("handler", "recipes", "usage") -> "Unknown NEI action: $mode"
             (attrs["id"].orEmpty() + attrs["handlerId"].orEmpty()).any { it.code < 32 || it.code in 127..159 } -> "NEI targets must not contain control characters."
             mode == "handler" && (handler.isBlank() || id.isNotBlank()) -> "NEI handler mode requires handlerId and does not accept id."
             mode != "handler" && id.isBlank() -> "NEI $mode mode requires id."
-            tag.selfClosing || (closing >= 0 && body.replace(Regex("<[^>]*>"), "").isBlank() && !visualContent) -> "NeiRecipeLink requires visible inline content."
+            tag.selfClosing || (closing >= 0 && body.isBlank()) -> "NeiRecipeLink requires visible inline content."
             else -> null
         }
         message?.let { error(holder, tag.range, it) }
